@@ -9,8 +9,13 @@ def main():
         "--model",
         type=str,
         default="glm-4-flash",
-        choices=["glm-4-flash", "glm-4-plus", "glm-5", "deepseek-chat", "deepseek-reasoner"],
+        choices=["glm-4-flash", "glm-4-plus", "glm-4.7", "glm-5", "deepseek-chat", "deepseek-reasoner"],
         help="指定使用的模型名",
+    )
+    parser.add_argument(
+        "--detect-only",
+        action="store_true",
+        help="仅运行上下文解析+一致性检测，跳过修正和审查",
     )
     args = parser.parse_args()
 
@@ -36,7 +41,7 @@ def calculate(a: int, b: int) -> int:
     print("-" * 40 + "\n")
 
     # 初始化工作流引擎
-    orchestrator = WorkflowOrchestrator(model_name=args.model)
+    orchestrator = WorkflowOrchestrator(model_name=args.model, detect_only=args.detect_only)
 
     # 运行多智能体系统
     result_state = orchestrator.run(code_snippet, original_comment)

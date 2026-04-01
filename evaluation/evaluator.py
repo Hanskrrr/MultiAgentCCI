@@ -157,7 +157,7 @@ class Evaluator:
         }
 
     @staticmethod
-    def generate_report(detection_metrics: Dict, rectification_metrics: Dict):
+    def generate_report(detection_metrics: Dict, rectification_metrics: Dict = None):
         """打印最终评估报告"""
         print("\n" + "=" * 60)
         print("= 学术级代码注释一致性系统评估报告 (ICSE Baseline) =")
@@ -167,8 +167,11 @@ class Evaluator:
         for k, v in detection_metrics.items():
             print(f"  - {k}: {v}")
 
-        print("\n【修正能力评估 (Rectification Metrics)】")
-        print("  *(真实标签为不一致样本的生成质量)*")
-        for k, v in rectification_metrics.items():
-            print(f"  - {k}: {v}")
+        if rectification_metrics is not None:
+            print("\n【修正能力评估 (Rectification Metrics)】")
+            print("  *(真实标签为不一致样本的生成质量)*")
+            for k, v in rectification_metrics.items():
+                print(f"  - {k}: {v}")
+        else:
+            print("\n【修正能力评估】已跳过（仅检测模式）")
         print("=" * 60 + "\n")

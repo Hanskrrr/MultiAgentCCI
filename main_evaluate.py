@@ -12,8 +12,13 @@ def main():
         "--model",
         type=str,
         default="glm-4-flash",
-        choices=["glm-4-flash", "glm-4-plus", "glm-5", "deepseek-chat", "deepseek-reasoner"],
+        choices=["glm-4-flash", "glm-4-plus", "glm-4.7", "glm-5", "deepseek-chat", "deepseek-reasoner"],
         help="指定使用的模型名",
+    )
+    parser.add_argument(
+        "--detect-only",
+        action="store_true",
+        help="仅运行上下文解析+一致性检测，跳过修正和审查（只输出检测指标）",
     )
     parser.add_argument(
         "--limit",
@@ -62,7 +67,7 @@ def main():
     print(f"[*] 数据集加载完成，共计 {len(dataset)} 条有效数据。\n")
 
     # 初始化工作流引擎
-    orchestrator = WorkflowOrchestrator(model_name=args.model, max_retries=2)
+    orchestrator = WorkflowOrchestrator(model_name=args.model, max_retries=2, detect_only=args.detect_only)
 
     # 用于收集评估结果的容器
     y_true_detection = []
@@ -108,11 +113,14 @@ def main():
         y_true=y_true_detection, y_pred=y_pred_detection
     )
 
-    rectification_metrics = evaluator.evaluate_rectification(
-        sources=sources_rectification,
-        ground_truths=ground_truths_rectification,
-        generated_comments=generated_rectifications,
-    )
+    if args.detect_only:
+        rectification_metrics = None
+    else:
+        rectification_metrics = evaluator.evaluate_rectification(
+            sources=sources_rectification,
+            ground_truths=ground_truths_rectification,
+            generated_comments=generated_rectifications,
+        )
 
     # 4. 打印报告
     evaluator.generate_report(detection_metrics, rectification_metrics)
