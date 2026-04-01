@@ -1,0 +1,10 @@
+openai>=1.0.0
+zhipuai>=2.1.5
+python-dotenv>=1.0.0
+gdown>=5.0.0
+tqdm>=4.66.0
+scikit-learn>=1.0.0
+nltk>=3.8.1
+evaluate>=0.4.0
+sacrebleu>=2.3.0
+sacremoses>=0.0.53
