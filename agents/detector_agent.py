@@ -147,14 +147,25 @@ These are deterministic signals extracted from code/comment. Treat them as high-
                 common_head
                 + signal_block
                 + """
-Classification Guidelines (@param focused):
-1. Exact Name Matching: @param identifier must match code parameter name exactly.
-2. Type Precision: @param type mentions must match signature types (e.g., float vs double is INCONSISTENT).
-3. Logic/Intent Drift: If behavior described by the comment no longer matches code, mark INCONSISTENT.
-4. Be strict on identifier drift; do not forgive renames.
+Classification Guidelines (IMPORTANT):
+
+=== @param Rules (Primary Focus) ===
+1. Exact Name Matching: If a comment documents a parameter (e.g., "@param file") but the code signature uses a different name (e.g., "requiredFile"), it is INCONSISTENT (Rename Drift).
+2. Type Precision: If a comment specifies a type (e.g., "@param float x") but the code uses a different type (e.g., "double x"), it is INCONSISTENT (Type Drift).
+3. Logic Drift: If the core functional behavior described in the comment has changed, it is INCONSISTENT.
+4. Be strict on identifier drift; do not forgive renames or synonym substitutions for parameter names.
+
+=== General Rules ===
+5. Tolerate Natural Language Paraphrasing ONLY for variable-to-description (e.g., `userId` described as "user ID" is fine).
+6. CONSISTENT if: All parameter identifiers match the code signature EXACTLY, types are correct, and the functional description remains accurate.
+
+Benchmark Examples for Calibration:
+- Ex A (INCONSISTENT): Comment: "@param file to upload", Code: "upload(File requiredFile)" -> Name mismatch (file vs requiredFile).
+- Ex B (INCONSISTENT): Comment: "@param float x", Code: "distance(double x)" -> Type mismatch (float vs double).
+- Ex C (CONSISTENT): Code changed internal logic but parameter name and types match the description -> CONSISTENT.
 
 Output Requirement:
-Reasoning: <Direct comparison of identifiers and types in comment vs signature>
+Reasoning: <Direct comparison of identifiers and types mentioned in the comment vs the code signature>
 CONCLUSION: [CONSISTENT or INCONSISTENT]
 """
             )
@@ -164,15 +175,30 @@ CONCLUSION: [CONSISTENT or INCONSISTENT]
                 common_head
                 + signal_block
                 + """
-Classification Guidelines (@return focused):
-1. Return Class/Type Matching: if comment explicitly names a class/type, it must match actual return type.
-2. Return Conditions: if code can return null/fallback or throw exceptions relevant to return semantics, omissions in @return imply INCONSISTENT.
-3. Unit/Qualifier Precision: unit words (seconds/milliseconds) and object identity qualifiers ("same object" vs "new object") must be accurate.
-4. Tolerate variable-to-natural-language paraphrases ONLY when meaning is unchanged.
-5. Do NOT treat class-name substitutions as paraphrases.
+Classification Guidelines (IMPORTANT):
+
+=== @return Rules (Primary Focus) ===
+1. Return Class/Type Name Matching: If the comment mentions a SPECIFIC class name (e.g., "HornetQConnectionFactory", "JMenuItem", "HttpServletRequest") but the code returns a DIFFERENT class (e.g., "ActiveMQConnectionFactory", "ZapMenuItem", "AtmosphereRequest"), it is INCONSISTENT. Class names must match exactly — renaming a class is NOT paraphrasing.
+2. Unit / Precision Mismatch: If the comment specifies a unit (e.g., "in milliseconds") but the code uses a different unit (e.g., seconds), or a qualifier like "this same object" when the code returns a new object, it is INCONSISTENT.
+3. Missing Return Condition: If the code has conditional branches that return null, throw exceptions, or return a fallback value, but the comment omits these conditions, it is INCONSISTENT. Look carefully at ALL return paths and null checks.
+4. Semantic Over-specification: If the comment adds qualifiers, details, or attributions (e.g., "used by this SVGGraphics2D instance", "on the test VirtualHost") that no longer match the actual code, it is INCONSISTENT.
+
+=== General Rules ===
+5. Tolerate ONLY Variable-to-NaturalLanguage Paraphrasing: A comment like "@return the parent type information" for code `return parentInfo` is CONSISTENT. However, substituting one CLASS NAME for another (e.g., "HornetQ" for "ActiveMQ") is NOT paraphrasing — it is INCONSISTENT.
+6. CONSISTENT if and only if: All class/type names mentioned in the comment match the code, the return behavior is accurately described, no important conditions (null, exceptions, edge cases) are omitted, and units/qualifiers are correct.
+
+Benchmark Examples for Calibration:
+- Ex A (INCONSISTENT, class rename): Comment: "@return the HornetQConnectionFactory", Code returns ActiveMQConnectionFactory -> Class name changed.
+- Ex B (INCONSISTENT, class rename): Comment: "@return javax.swing.JMenuItem", Code returns ZapMenuItem -> Class name changed.
+- Ex C (INCONSISTENT, missing null): Comment: "@return an instance of Foo", Code can return null on failure but comment omits this.
+- Ex D (INCONSISTENT, missing condition): Comment: "@return read-only view of headers", Code: `return headers == null ? null : unmodifiableMap(headers)` -> Missing "or null if none are set".
+- Ex E (INCONSISTENT, unit error): Comment: "@return max time in milliseconds", Code variable is actually in seconds -> Unit mismatch.
+- Ex F (INCONSISTENT, identity): Comment: "@return this same sentence", Code: `return new Sentence(...)` -> Returns new object, not "this same".
+- Ex G (CONSISTENT): Comment: "@return the parent type information", Code: `return parentInfo;` -> Variable name described in natural language, meaning aligns.
+- Ex H (CONSISTENT): Code changed internal logic but return type, behavior, and conditions still match -> CONSISTENT.
 
 Output Requirement:
-Reasoning: <Compare @return semantics, return type/class names, and return-path conditions>
+Reasoning: <Compare @return semantics, return type/class names, and return-path conditions step by step>
 CONCLUSION: [CONSISTENT or INCONSISTENT]
 """
             )
@@ -181,10 +207,20 @@ CONCLUSION: [CONSISTENT or INCONSISTENT]
             common_head
             + signal_block
             + """
-Classification Guidelines (summary focused):
-1. Functional Accuracy: summary must align with current behavior.
-2. Critical Drift: operation/object/target changes imply INCONSISTENT.
-3. Minor wording changes without semantic drift are CONSISTENT.
+Classification Guidelines (IMPORTANT):
+
+=== Summary Rules (Primary Focus) ===
+1. Functional Accuracy: The summary must align with the current code behavior.
+2. Critical Drift: If the operation, object, or target described in the summary has changed, it is INCONSISTENT.
+3. Identifier/Class Changes: If the summary references specific class names or method targets that have been renamed, it is INCONSISTENT.
+
+=== General Rules ===
+4. Tolerate minor wording changes without semantic drift.
+5. CONSISTENT if: The summary accurately reflects the current code's purpose, objects, and behavior.
+
+Benchmark Examples for Calibration:
+- Ex A (INCONSISTENT): Summary says "Creates elastic node as single member of a cluster", but code now creates an instance with existing settings -> Purpose changed.
+- Ex B (CONSISTENT): Summary says "Sends an email to the given address", code still does `smtp.send(to_addr, content)` -> Meaning unchanged.
 
 Output Requirement:
 Reasoning: <Compare summary semantics with current code behavior>
@@ -234,6 +270,8 @@ CONCLUSION: [CONSISTENT or INCONSISTENT]
 
         except Exception as e:
             state.log(f"[{self.name}] Model calling exception: {e}")
+            state.detection_method = "llm_error"
             state.is_consistent = True
+            state.inconsistency_reason = f"LLM call failed: {e}"
 
         return state
