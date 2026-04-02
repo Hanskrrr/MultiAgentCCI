@@ -21,6 +21,12 @@ def main():
         help="仅运行上下文解析+一致性检测，跳过修正和审查（只输出检测指标）",
     )
     parser.add_argument(
+        "--offset",
+        type=int,
+        default=0,
+        help="跳过前 N 条数据，从第 N+1 条开始评估",
+    )
+    parser.add_argument(
         "--limit",
         type=int,
         default=None,
@@ -60,6 +66,9 @@ def main():
     if args.category:
         dataset = [d for d in dataset if d["id"].startswith(args.category + "_")]
         print(f"[*] 已按类型筛选: {args.category}，剩余 {len(dataset)} 条数据。")
+
+    if args.offset:
+        dataset = dataset[args.offset:]
 
     if args.limit:
         dataset = dataset[: args.limit]
