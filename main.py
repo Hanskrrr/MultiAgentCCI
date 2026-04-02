@@ -17,6 +17,11 @@ def main():
         action="store_true",
         help="仅运行上下文解析+一致性检测，跳过修正和审查",
     )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="输出详细调试信息（判定来源、规则信号等）",
+    )
     args = parser.parse_args()
 
     print("========================================")
@@ -41,7 +46,7 @@ def calculate(a: int, b: int) -> int:
     print("-" * 40 + "\n")
 
     # 初始化工作流引擎
-    orchestrator = WorkflowOrchestrator(model_name=args.model, detect_only=args.detect_only)
+    orchestrator = WorkflowOrchestrator(model_name=args.model, detect_only=args.detect_only, verbose=args.verbose)
 
     # 运行多智能体系统
     result_state = orchestrator.run(code_snippet, original_comment)
@@ -50,6 +55,22 @@ def calculate(a: int, b: int) -> int:
     print("【多智能体执行日志】：")
     for log in result_state.history:
         print(f"  {log}")
+
+    if args.verbose:
+        print("\n【调试信息】")
+        print(f"  判定方式: {result_state.detection_method}")
+        print(f"  注释类型: {result_state.detected_comment_type}")
+        print(f"  接口签名: {result_state.interface_context}")
+        if result_state.rule_signals:
+            print("  规则信号:")
+            for sig in result_state.rule_signals:
+                print(f"    - {sig}")
+        if result_state.rule_hard_fails:
+            print("  规则硬判:")
+            for hf in result_state.rule_hard_fails:
+                print(f"    - {hf}")
+        if result_state.inconsistency_reason:
+            print(f"  不一致原因: {result_state.inconsistency_reason[:300]}")
 
     # 输出结果
     print("\n" + "=" * 40)

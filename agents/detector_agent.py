@@ -200,13 +200,17 @@ CONCLUSION: [CONSISTENT or INCONSISTENT]
             "Original Comment accurately describes the given Current Code after updates."
         )
         comment_type = self._detect_comment_type(state.original_comment)
+        state.detected_comment_type = comment_type
         signals = []
         hard_fail_reasons = []
         if comment_type == "return":
             hard_fail_reasons, signals = self._rule_check_return(state)
+            state.rule_signals = signals
+            state.rule_hard_fails = hard_fail_reasons
             if hard_fail_reasons:
                 state.is_consistent = False
                 state.inconsistency_reason = " | ".join(hard_fail_reasons)
+                state.detection_method = "rule"
                 state.log(
                     f"[{self.name}] Rule-based return check flagged inconsistency: {state.inconsistency_reason[:120]}..."
                 )
@@ -219,6 +223,7 @@ CONCLUSION: [CONSISTENT or INCONSISTENT]
             state.is_consistent, state.inconsistency_reason = self._parse_model_conclusion(
                 response
             )
+            state.detection_method = "llm"
 
             if state.is_consistent:
                 state.log(f"[{self.name}] Detection Passed: Comment is consistent.")

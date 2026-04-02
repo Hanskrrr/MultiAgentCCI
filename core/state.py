@@ -22,6 +22,10 @@ class CodeCommentState:
     # 检测智能体结果
     is_consistent: Optional[bool] = None
     inconsistency_reason: str = ""
+    detection_method: str = ""          # "rule" | "llm"
+    detected_comment_type: str = ""     # "param" | "return" | "summary"
+    rule_signals: List[str] = field(default_factory=list)
+    rule_hard_fails: List[str] = field(default_factory=list)
 
     # 修正智能体结果
     rectified_comment: str = ""

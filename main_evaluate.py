@@ -39,6 +39,11 @@ def main():
         choices=["Param", "Return", "Summary"],
         help="只测试指定类型的数据（按 ID 前缀筛选），不指定则测试全部",
     )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="输出每条数据的详细调试信息（判定来源、注释类型、规则信号等）",
+    )
     args = parser.parse_args()
 
     print("===================================================")
@@ -76,7 +81,7 @@ def main():
     print(f"[*] 数据集加载完成，共计 {len(dataset)} 条有效数据。\n")
 
     # 初始化工作流引擎
-    orchestrator = WorkflowOrchestrator(model_name=args.model, max_retries=2, detect_only=args.detect_only)
+    orchestrator = WorkflowOrchestrator(model_name=args.model, max_retries=2, detect_only=args.detect_only, verbose=args.verbose)
 
     # 用于收集评估结果的容器
     y_true_detection = []
@@ -109,10 +114,31 @@ def main():
             else:
                 generated_rectifications.append(data["original_comment"])
 
+        is_correct = data["label_consistent"] == result_state.is_consistent
+        mark = "✓" if is_correct else "✗"
         print(
-            f"    真实标签: {'一致' if data['label_consistent'] else '不一致'} | "
-            f"预测标签: {'一致' if result_state.is_consistent else '不一致'}"
+            f"    {mark} 真实标签: {'一致' if data['label_consistent'] else '不一致'} | "
+            f"预测标签: {'一致' if result_state.is_consistent else '不一致'} | "
+            f"判定方式: {result_state.detection_method} | "
+            f"注释类型: {result_state.detected_comment_type}"
         )
+
+        if args.verbose:
+            print(f"    [DEBUG] 注释内容: {data['original_comment'][:120]}")
+            print(f"    [DEBUG] 接口签名: {result_state.interface_context[:120]}")
+            if result_state.rule_signals:
+                for sig in result_state.rule_signals:
+                    print(f"    [DEBUG] 规则信号: {sig}")
+            if result_state.rule_hard_fails:
+                for hf in result_state.rule_hard_fails:
+                    print(f"    [DEBUG] 规则硬判: {hf}")
+            if result_state.inconsistency_reason:
+                print(f"    [DEBUG] 不一致原因: {result_state.inconsistency_reason[:200]}")
+            if not is_correct:
+                if not data["label_consistent"]:
+                    print(f"    [DEBUG] 标准注释: {data['ground_truth_comment'][:120]}")
+                print(f"    [DEBUG] >>> 此条判定错误 <<<")
+            print()
 
     # 3. 结果评估
     print("\n[*] 正在计算评估指标...")
