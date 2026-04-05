@@ -4,6 +4,7 @@ import re
 from typing import List, Dict, Optional
 
 from rank_bm25 import BM25Okapi
+from core.java_parser import parse_java_method
 
 
 _CAMEL_SPLIT = re.compile(r"(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
@@ -13,12 +14,12 @@ _JAVA_STOPWORDS = frozenset({
     "public", "private", "protected", "static", "final", "void", "class",
     "interface", "extends", "implements", "import", "package", "new",
     "this", "super", "if", "else", "for", "while", "do", "switch", "case",
-    "break", "continue", "return", "try", "catch", "finally", "throw",
-    "throws", "instanceof", "abstract", "synchronized", "volatile",
+    "break", "continue", "try", "catch", "finally",
+    "instanceof", "abstract", "synchronized", "volatile",
     "transient", "native", "strictfp", "assert", "enum", "default",
-    "true", "false", "null", "int", "long", "short", "byte", "float",
-    "double", "char", "boolean", "string", "object",
-    "the", "a", "an", "is", "are", "of", "to", "in", "and", "or", "not",
+    "int", "long", "short", "byte", "float",
+    "double", "char", "object",
+    "the", "an", "is", "are", "of", "to", "in", "and", "or", "not",
     "that", "with", "for", "from", "by", "on", "at", "be", "as", "it",
 })
 
@@ -36,7 +37,15 @@ def _tokenize(text: str) -> List[str]:
     return tokens
 
 
-def _truncate_code(code: str, max_lines: int = 15) -> str:
+def _smart_truncate(code: str, max_lines: int = 15) -> str:
+    """Extract signature + return statements via tree-sitter; fall back to line truncation."""
+    parsed = parse_java_method(code)
+    if parsed and parsed.get("method_name"):
+        parts = [parsed["full_signature"]]
+        for expr in parsed.get("return_expressions", [])[:5]:
+            parts.append(f"  return {expr};")
+        return "\n".join(parts)
+
     lines = code.split("\n")
     if len(lines) <= max_lines:
         return code.strip()
@@ -134,7 +143,7 @@ class ExampleRetriever:
             ex = self._examples[idx]
             results.append({
                 "comment": ex["comment"],
-                "code_truncated": _truncate_code(ex["code"]),
+                "code_truncated": _smart_truncate(ex["code"]),
                 "label": "INCONSISTENT" if ex["is_inconsistent"] else "CONSISTENT",
                 "ground_truth": ex["ground_truth"],
             })
