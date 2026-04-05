@@ -60,8 +60,16 @@ class DetectorAgent(BaseAgent):
         signals = []
 
         comment = state.original_comment
+        comment_lower = comment.lower()
         code = state.code_snippet
-        return_type = self._extract_return_type_from_context(state.interface_context)
+        ast_ctx = getattr(state, "ast_context", {}) or {}
+
+        # --- Return type: prefer tree-sitter, fall back to LLM-parsed context ---
+        if ast_ctx.get("return_type"):
+            return_type = ast_ctx["return_type"]
+        else:
+            return_type = self._extract_return_type_from_context(state.interface_context)
+
         norm_return = self._normalize_type_name(return_type) if return_type else ""
         mentions = self._extract_explicit_return_type_mentions(comment)
 
@@ -70,37 +78,58 @@ class DetectorAgent(BaseAgent):
         if mentions:
             signals.append(f"Explicit return type mentions in comment: {mentions}")
 
-        # Hard rule 1: explicit class/type mention must match parsed return type.
+        # Hard rule 1: explicit class/type mention must match parsed return type
         if norm_return and mentions:
             compatible = False
             for m in mentions:
                 nm = self._normalize_type_name(m)
-                if nm == norm_return:
-                    compatible = True
-                    break
-                if nm.endswith(norm_return) or norm_return.endswith(nm):
+                if nm == norm_return or nm.endswith(norm_return) or norm_return.endswith(nm):
                     compatible = True
                     break
             if not compatible:
                 hard_fail_reasons.append(
-                    f"Return type/class mismatch: comment mentions {mentions}, but code signature returns {return_type}."
+                    f"Return type/class mismatch: comment mentions {mentions}, "
+                    f"but code signature returns {return_type}."
                 )
 
-        # Hard rule 2: code has an explicit null return path but comment omits null.
-        has_return_null = re.search(r"\breturn\s+null\b", code, flags=re.IGNORECASE) is not None
-        if has_return_null and "null" not in comment.lower():
+        # --- Null return: prefer tree-sitter, fall back to regex ---
+        if "has_null_return" in ast_ctx:
+            has_null = ast_ctx["has_null_return"]
+        else:
+            has_null = re.search(r"\breturn\s+null\b", code, flags=re.IGNORECASE) is not None
+
+        if has_null and "null" not in comment_lower:
             hard_fail_reasons.append(
                 "Code contains 'return null' branch but @return comment does not mention null."
             )
-        elif has_return_null:
+        elif has_null:
             signals.append("Code has an explicit null return branch.")
 
-        # Soft signal: method declares throws but comment omits exception signal.
-        has_throws = re.search(r"\bthrows\b", code, flags=re.IGNORECASE) is not None
-        if has_throws and ("throw" not in comment.lower() and "exception" not in comment.lower()):
+        # --- Empty collection return (tree-sitter only) ---
+        if ast_ctx.get("has_empty_return") and "empty" not in comment_lower:
             signals.append(
-                "Method signature/logic indicates exceptions (throws), but @return comment does not mention exceptions."
+                "Code returns empty collection/Optional but comment does not mention empty case."
             )
+
+        # --- Throws: prefer tree-sitter, fall back to regex ---
+        if ast_ctx.get("throws"):
+            throws_list = ast_ctx["throws"]
+            if not any(w in comment_lower for w in ("throw", "exception", "error")):
+                signals.append(
+                    f"Method throws {throws_list} but comment does not mention exceptions."
+                )
+        else:
+            has_throws = re.search(r"\bthrows\b", code, flags=re.IGNORECASE) is not None
+            if has_throws and not any(w in comment_lower for w in ("throw", "exception")):
+                signals.append(
+                    "Method signature indicates exceptions (throws), "
+                    "but @return comment does not mention exceptions."
+                )
+
+        # --- Multiple return paths (tree-sitter only) ---
+        ret_exprs = ast_ctx.get("return_expressions", [])
+        if len(ret_exprs) > 1:
+            signals.append(f"Method has {len(ret_exprs)} distinct return paths.")
 
         return hard_fail_reasons, signals
 
