@@ -3,6 +3,7 @@ from agents.context_parser_agent import ContextParserAgent
 from agents.detector_agent import DetectorAgent
 from agents.rectifier_agent import RectifierAgent
 from agents.reviewer_agent import ReviewerAgent
+from retrieval.example_retriever import ExampleRetriever
 
 
 class WorkflowOrchestrator:
@@ -16,7 +17,8 @@ class WorkflowOrchestrator:
         self.detect_only = detect_only
         self.verbose = verbose
         self.parser = ContextParserAgent(model_name=model_name)
-        self.detector = DetectorAgent(model_name=model_name)
+        self.retriever = ExampleRetriever()
+        self.detector = DetectorAgent(model_name=model_name, retriever=self.retriever)
         self.rectifier = RectifierAgent(model_name=model_name)
         self.reviewer = ReviewerAgent(model_name=model_name)
 

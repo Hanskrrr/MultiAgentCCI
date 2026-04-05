@@ -10,8 +10,9 @@ class DetectorAgent(BaseAgent):
     判断代码与注释是否具有一致性。
     """
 
-    def __init__(self, model_name: str = "glm-4-flash"):
+    def __init__(self, model_name: str = "glm-4-flash", retriever=None):
         super().__init__(name="DetectorAgent", model_name=model_name)
+        self.retriever = retriever
 
     def _detect_comment_type(self, comment: str) -> str:
         c = comment.lower()
@@ -115,6 +116,34 @@ class DetectorAgent(BaseAgent):
             return False, response.strip()
         return True, ""
 
+    _STATIC_RETURN_EXAMPLES = """
+Benchmark Examples for Calibration:
+- Ex A (INCONSISTENT, class rename): Comment: "@return the HornetQConnectionFactory", Code returns ActiveMQConnectionFactory -> Class name changed.
+- Ex B (INCONSISTENT, class rename): Comment: "@return javax.swing.JMenuItem", Code returns ZapMenuItem -> Class name changed.
+- Ex C (INCONSISTENT, missing null): Comment: "@return an instance of Foo", Code can return null on failure but comment omits this.
+- Ex D (INCONSISTENT, missing condition): Comment: "@return read-only view of headers", Code: `return headers == null ? null : unmodifiableMap(headers)` -> Missing "or null if none are set".
+- Ex E (INCONSISTENT, unit error): Comment: "@return max time in milliseconds", Code variable is actually in seconds -> Unit mismatch.
+- Ex F (INCONSISTENT, identity): Comment: "@return this same sentence", Code: `return new Sentence(...)` -> Returns new object, not "this same".
+- Ex G (CONSISTENT): Comment: "@return the parent type information", Code: `return parentInfo;` -> Variable name described in natural language, meaning aligns.
+- Ex H (CONSISTENT): Code changed internal logic but return type, behavior, and conditions still match -> CONSISTENT.
+"""
+
+    def _get_return_examples(self, state: CodeCommentState) -> str:
+        if self.retriever is None:
+            return self._STATIC_RETURN_EXAMPLES
+        try:
+            examples = self.retriever.retrieve(
+                comment=state.original_comment,
+                code=state.code_snippet,
+                top_k=3,
+                ensure_mix=True,
+            )
+            if not examples:
+                return self._STATIC_RETURN_EXAMPLES
+            return self.retriever.format_examples(examples)
+        except Exception:
+            return self._STATIC_RETURN_EXAMPLES
+
     def _build_prompt(self, state: CodeCommentState, comment_type: str, signals: list) -> str:
         common_head = f"""
 Task: Determine if the [Original Comment] is CONSISTENT with the [Current Code].
@@ -171,10 +200,7 @@ CONCLUSION: [CONSISTENT or INCONSISTENT]
             )
 
         if comment_type == "return":
-            return (
-                common_head
-                + signal_block
-                + """
+            guidelines = """
 Classification Guidelines (IMPORTANT):
 
 === @return Rules (Primary Focus) ===
@@ -186,17 +212,15 @@ Classification Guidelines (IMPORTANT):
 === General Rules ===
 5. Tolerate ONLY Variable-to-NaturalLanguage Paraphrasing: A comment like "@return the parent type information" for code `return parentInfo` is CONSISTENT. However, substituting one CLASS NAME for another (e.g., "HornetQ" for "ActiveMQ") is NOT paraphrasing — it is INCONSISTENT.
 6. CONSISTENT if and only if: All class/type names mentioned in the comment match the code, the return behavior is accurately described, no important conditions (null, exceptions, edge cases) are omitted, and units/qualifiers are correct.
+"""
+            examples_block = self._get_return_examples(state)
 
-Benchmark Examples for Calibration:
-- Ex A (INCONSISTENT, class rename): Comment: "@return the HornetQConnectionFactory", Code returns ActiveMQConnectionFactory -> Class name changed.
-- Ex B (INCONSISTENT, class rename): Comment: "@return javax.swing.JMenuItem", Code returns ZapMenuItem -> Class name changed.
-- Ex C (INCONSISTENT, missing null): Comment: "@return an instance of Foo", Code can return null on failure but comment omits this.
-- Ex D (INCONSISTENT, missing condition): Comment: "@return read-only view of headers", Code: `return headers == null ? null : unmodifiableMap(headers)` -> Missing "or null if none are set".
-- Ex E (INCONSISTENT, unit error): Comment: "@return max time in milliseconds", Code variable is actually in seconds -> Unit mismatch.
-- Ex F (INCONSISTENT, identity): Comment: "@return this same sentence", Code: `return new Sentence(...)` -> Returns new object, not "this same".
-- Ex G (CONSISTENT): Comment: "@return the parent type information", Code: `return parentInfo;` -> Variable name described in natural language, meaning aligns.
-- Ex H (CONSISTENT): Code changed internal logic but return type, behavior, and conditions still match -> CONSISTENT.
-
+            return (
+                common_head
+                + signal_block
+                + guidelines
+                + examples_block
+                + """
 Output Requirement:
 Reasoning: <Compare @return semantics, return type/class names, and return-path conditions step by step>
 CONCLUSION: [CONSISTENT or INCONSISTENT]
