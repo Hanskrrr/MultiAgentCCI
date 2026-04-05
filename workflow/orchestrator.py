@@ -12,11 +12,11 @@ class WorkflowOrchestrator:
     管理和协调多个智能体的交互流，确保按照既定的执行顺序处理代码和注释。
     """
 
-    def __init__(self, model_name: str = "glm-4-flash", max_retries: int = 3, detect_only: bool = False, verbose: bool = False):
+    def __init__(self, model_name: str = "glm-4-flash", max_retries: int = 3, detect_only: bool = False, verbose: bool = False, parser_mode: str = "treesitter"):
         self.model_name = model_name
         self.detect_only = detect_only
         self.verbose = verbose
-        self.parser = ContextParserAgent(model_name=model_name)
+        self.parser = ContextParserAgent(model_name=model_name, parser_mode=parser_mode)
         self.retriever = ExampleRetriever()
         self.detector = DetectorAgent(model_name=model_name, retriever=self.retriever)
         self.rectifier = RectifierAgent(model_name=model_name)

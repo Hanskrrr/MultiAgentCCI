@@ -44,6 +44,13 @@ def main():
         action="store_true",
         help="输出每条数据的详细调试信息（判定来源、注释类型、规则信号等）",
     )
+    parser.add_argument(
+        "--parser",
+        type=str,
+        default="treesitter",
+        choices=["treesitter", "llm"],
+        help="上下文解析方式: treesitter (确定性解析, 默认) 或 llm (调用大模型解析)",
+    )
     args = parser.parse_args()
 
     print("===================================================")
@@ -81,7 +88,7 @@ def main():
     print(f"[*] 数据集加载完成，共计 {len(dataset)} 条有效数据。\n")
 
     # 初始化工作流引擎
-    orchestrator = WorkflowOrchestrator(model_name=args.model, max_retries=2, detect_only=args.detect_only, verbose=args.verbose)
+    orchestrator = WorkflowOrchestrator(model_name=args.model, max_retries=2, detect_only=args.detect_only, verbose=args.verbose, parser_mode=args.parser)
 
     # 用于收集评估结果的容器
     y_true_detection = []

@@ -111,12 +111,13 @@ class DetectorAgent(BaseAgent):
                 "Code returns empty collection/Optional but comment does not mention empty case."
             )
 
-        # --- Throws: prefer tree-sitter, fall back to regex ---
+        # --- Throws: tree-sitter gives precise list; promote to hard fail ---
         if ast_ctx.get("throws"):
             throws_list = ast_ctx["throws"]
-            if not any(w in comment_lower for w in ("throw", "exception", "error")):
-                signals.append(
-                    f"Method throws {throws_list} but comment does not mention exceptions."
+            if not any(w in comment_lower for w in ("throw", "exception", "error", "illegal")):
+                hard_fail_reasons.append(
+                    f"Method declares throws {throws_list} but @return comment "
+                    f"does not mention exceptions."
                 )
         else:
             has_throws = re.search(r"\bthrows\b", code, flags=re.IGNORECASE) is not None
@@ -125,11 +126,6 @@ class DetectorAgent(BaseAgent):
                     "Method signature indicates exceptions (throws), "
                     "but @return comment does not mention exceptions."
                 )
-
-        # --- Multiple return paths (tree-sitter only) ---
-        ret_exprs = ast_ctx.get("return_expressions", [])
-        if len(ret_exprs) > 1:
-            signals.append(f"Method has {len(ret_exprs)} distinct return paths.")
 
         return hard_fail_reasons, signals
 

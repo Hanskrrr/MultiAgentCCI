@@ -22,6 +22,13 @@ def main():
         action="store_true",
         help="输出详细调试信息（判定来源、规则信号等）",
     )
+    parser.add_argument(
+        "--parser",
+        type=str,
+        default="treesitter",
+        choices=["treesitter", "llm"],
+        help="上下文解析方式: treesitter (确定性解析, 默认) 或 llm (调用大模型解析)",
+    )
     args = parser.parse_args()
 
     print("========================================")
@@ -46,7 +53,7 @@ def calculate(a: int, b: int) -> int:
     print("-" * 40 + "\n")
 
     # 初始化工作流引擎
-    orchestrator = WorkflowOrchestrator(model_name=args.model, detect_only=args.detect_only, verbose=args.verbose)
+    orchestrator = WorkflowOrchestrator(model_name=args.model, detect_only=args.detect_only, verbose=args.verbose, parser_mode=args.parser)
 
     # 运行多智能体系统
     result_state = orchestrator.run(code_snippet, original_comment)

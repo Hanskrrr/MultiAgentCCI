@@ -13,8 +13,9 @@ class ContextParserAgent(BaseAgent):
     并为后续智能体提供"意图层"、"接口层"和"实现层"的上下文信息。
     """
 
-    def __init__(self, model_name: str = "glm-4-flash"):
+    def __init__(self, model_name: str = "glm-4-flash", parser_mode: str = "treesitter"):
         super().__init__(name="ContextParserAgent", model_name=model_name)
+        self.parser_mode = parser_mode
 
     @staticmethod
     def _method_name_to_intent(name: str) -> str:
@@ -142,14 +143,14 @@ Return strictly in JSON format:
             state.implementation_context = "Failed to parse implementation"
 
     def process(self, state: CodeCommentState) -> CodeCommentState:
-        state.log(f"[{self.name}] Starting code analysis and semantic extraction...")
+        state.log(f"[{self.name}] Starting code analysis (mode={self.parser_mode})...")
 
-        if self._try_treesitter(state):
-            return state
+        if self.parser_mode == "treesitter":
+            if self._try_treesitter(state):
+                return state
+            if self._try_python_ast(state):
+                return state
+            state.log(f"[{self.name}] Deterministic parsing failed. Falling back to LLM.")
 
-        if self._try_python_ast(state):
-            return state
-
-        state.log(f"[{self.name}] Deterministic parsing failed. Falling back to LLM.")
         self._fallback_llm(state)
         return state
