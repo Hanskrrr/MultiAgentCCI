@@ -1,2 +1,5 @@
 dataset/
 *.part
+.env
+.env.local
+.env.*
