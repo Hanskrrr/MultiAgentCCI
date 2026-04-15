@@ -11,3 +11,4 @@ sacremoses>=0.0.53
 rank-bm25>=0.2.2
 tree-sitter>=0.22.0
 tree-sitter-java>=0.23.0
+sentence-transformers>=2.7.0
