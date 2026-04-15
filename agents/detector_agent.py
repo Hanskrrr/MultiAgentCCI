@@ -1,3 +1,4 @@
+import difflib
 import re
 from .base_agent import BaseAgent
 from core.state import CodeCommentState
@@ -93,13 +94,16 @@ class DetectorAgent(BaseAgent):
                 )
 
         # --- Null return: prefer tree-sitter, fall back to regex ---
+        # Only flag when a top-level "return null;" statement exists,
+        # not null literals inside ternaries, constructor args, or inner classes.
         if "has_null_return" in ast_ctx:
             has_null = ast_ctx["has_null_return"]
         else:
-            has_null = re.search(r"\breturn\s+null\b", code, flags=re.IGNORECASE) is not None
+            # Stricter regex: "return null;" on its own line, not inside ternary or expression
+            has_null = re.search(r"^\s*return\s+null\s*;", code, flags=re.MULTILINE) is not None
 
         if has_null and "null" not in comment_lower:
-            hard_fail_reasons.append(
+            signals.append(
                 "Code contains 'return null' branch but @return comment does not mention null."
             )
         elif has_null:
@@ -111,11 +115,11 @@ class DetectorAgent(BaseAgent):
                 "Code returns empty collection/Optional but comment does not mention empty case."
             )
 
-        # --- Throws: tree-sitter gives precise list; promote to hard fail ---
+        # --- Throws: demoted to signal (FP-prone as @return doesn't require mentioning exceptions) ---
         if ast_ctx.get("throws"):
             throws_list = ast_ctx["throws"]
             if not any(w in comment_lower for w in ("throw", "exception", "error", "illegal")):
-                hard_fail_reasons.append(
+                signals.append(
                     f"Method declares throws {throws_list} but @return comment "
                     f"does not mention exceptions."
                 )
@@ -169,7 +173,33 @@ Benchmark Examples for Calibration:
         except Exception:
             return self._STATIC_RETURN_EXAMPLES
 
+    def _build_code_diff(self, state: CodeCommentState) -> str:
+        """Generate a unified diff between old and new code if old_code is available."""
+        old = getattr(state, "old_code_snippet", "") or ""
+        if not old.strip():
+            return ""
+        old_lines = old.strip().splitlines(keepends=True)
+        new_lines = state.code_snippet.strip().splitlines(keepends=True)
+        diff = list(difflib.unified_diff(old_lines, new_lines, fromfile="old_code", tofile="new_code", lineterm=""))
+        if not diff:
+            return ""
+        # Keep only meaningful diff lines, limit length
+        diff_text = "\n".join(diff[:60])
+        return diff_text
+
     def _build_prompt(self, state: CodeCommentState, comment_type: str, signals: list) -> str:
+        diff_text = self._build_code_diff(state)
+        diff_block = ""
+        if diff_text:
+            diff_block = f"""
+[Code Change Diff] (old_code -> new_code)
+IMPORTANT: The Original Comment was written for the OLD code and was correct at that time.
+Your job is to determine if it is STILL consistent with the NEW code after the changes below.
+```diff
+{diff_text}
+```
+"""
+
         common_head = f"""
 Task: Determine if the [Original Comment] is CONSISTENT with the [Current Code].
 
@@ -181,7 +211,7 @@ Task: Determine if the [Original Comment] is CONSISTENT with the [Current Code].
 
 [Current Code]
 {state.code_snippet}
-
+{diff_block}
 [Code Context]
 - Signature: {state.interface_context}
 - Intent: {state.intention_context}

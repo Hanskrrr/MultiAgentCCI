@@ -12,10 +12,11 @@ class WorkflowOrchestrator:
     管理和协调多个智能体的交互流，确保按照既定的执行顺序处理代码和注释。
     """
 
-    def __init__(self, model_name: str = "glm-4-flash", max_retries: int = 3, detect_only: bool = False, verbose: bool = False, parser_mode: str = "treesitter"):
+    def __init__(self, model_name: str = "glm-4-flash", max_retries: int = 3, detect_only: bool = False, verbose: bool = False, parser_mode: str = "treesitter", use_diff: bool = False):
         self.model_name = model_name
         self.detect_only = detect_only
         self.verbose = verbose
+        self.use_diff = use_diff
         self.parser = ContextParserAgent(model_name=model_name, parser_mode=parser_mode)
         self.retriever = ExampleRetriever()
         self.detector = DetectorAgent(model_name=model_name, retriever=self.retriever)
@@ -24,13 +25,15 @@ class WorkflowOrchestrator:
 
         self.max_retries = max_retries
 
-    def run(self, code_snippet: str, original_comment: str) -> CodeCommentState:
+    def run(self, code_snippet: str, original_comment: str, old_code_snippet: str = "") -> CodeCommentState:
         """
         开始运行整个代码注释检测与修正管线
         """
         # 1. 初始化状态
         state = CodeCommentState(
-            code_snippet=code_snippet, original_comment=original_comment
+            code_snippet=code_snippet,
+            original_comment=original_comment,
+            old_code_snippet=old_code_snippet if self.use_diff else "",
         )
         state.log("[Orchestrator] 初始化任务，工作流开始。")
 

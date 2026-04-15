@@ -10,6 +10,7 @@ class CodeCommentState:
 
     code_snippet: str
     original_comment: str
+    old_code_snippet: str = ""
 
     # 上下文解析智能体提取的信息
     ast_context: Dict = field(default_factory=dict)

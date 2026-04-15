@@ -51,6 +51,11 @@ def main():
         choices=["treesitter", "llm"],
         help="上下文解析方式: treesitter (确定性解析, 默认) 或 llm (调用大模型解析)",
     )
+    parser.add_argument(
+        "--use-diff",
+        action="store_true",
+        help="启用 JIT diff 模式：将 old_code 与 new_code 的变化注入 Detector prompt",
+    )
     args = parser.parse_args()
 
     print("===================================================")
@@ -88,7 +93,7 @@ def main():
     print(f"[*] 数据集加载完成，共计 {len(dataset)} 条有效数据。\n")
 
     # 初始化工作流引擎
-    orchestrator = WorkflowOrchestrator(model_name=args.model, max_retries=2, detect_only=args.detect_only, verbose=args.verbose, parser_mode=args.parser)
+    orchestrator = WorkflowOrchestrator(model_name=args.model, max_retries=2, detect_only=args.detect_only, verbose=args.verbose, parser_mode=args.parser, use_diff=args.use_diff)
 
     # 用于收集评估结果的容器
     y_true_detection = []
@@ -104,7 +109,9 @@ def main():
 
         # 运行智能体框架
         result_state = orchestrator.run(
-            code_snippet=data["code_snippet"], original_comment=data["original_comment"]
+            code_snippet=data["code_snippet"],
+            original_comment=data["original_comment"],
+            old_code_snippet=data.get("old_code_snippet", ""),
         )
 
         # 收集检测评估数据

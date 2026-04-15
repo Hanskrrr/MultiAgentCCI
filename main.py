@@ -29,6 +29,11 @@ def main():
         choices=["treesitter", "llm"],
         help="上下文解析方式: treesitter (确定性解析, 默认) 或 llm (调用大模型解析)",
     )
+    parser.add_argument(
+        "--use-diff",
+        action="store_true",
+        help="启用 JIT diff 模式：将 old_code 与 new_code 的变化注入 Detector prompt",
+    )
     args = parser.parse_args()
 
     print("========================================")
@@ -53,7 +58,7 @@ def calculate(a: int, b: int) -> int:
     print("-" * 40 + "\n")
 
     # 初始化工作流引擎
-    orchestrator = WorkflowOrchestrator(model_name=args.model, detect_only=args.detect_only, verbose=args.verbose, parser_mode=args.parser)
+    orchestrator = WorkflowOrchestrator(model_name=args.model, detect_only=args.detect_only, verbose=args.verbose, parser_mode=args.parser, use_diff=args.use_diff)
 
     # 运行多智能体系统
     result_state = orchestrator.run(code_snippet, original_comment)
