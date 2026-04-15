@@ -19,7 +19,7 @@ class WorkflowOrchestrator:
         self.use_diff = use_diff
         self.parser = ContextParserAgent(model_name=model_name, parser_mode=parser_mode)
         self.retriever = ExampleRetriever()
-        self.detector = DetectorAgent(model_name=model_name, retriever=self.retriever)
+        self.detector = DetectorAgent(model_name=model_name, retriever=self.retriever, use_treesitter=(parser_mode == "treesitter"))
         self.rectifier = RectifierAgent(model_name=model_name)
         self.reviewer = ReviewerAgent(model_name=model_name)
 

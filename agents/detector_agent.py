@@ -11,9 +11,10 @@ class DetectorAgent(BaseAgent):
     判断代码与注释是否具有一致性。
     """
 
-    def __init__(self, model_name: str = "glm-4-flash", retriever=None):
+    def __init__(self, model_name: str = "glm-4-flash", retriever=None, use_treesitter: bool = True):
         super().__init__(name="DetectorAgent", model_name=model_name)
         self.retriever = retriever
+        self.use_treesitter = use_treesitter
 
     def _detect_comment_type(self, comment: str) -> str:
         c = comment.lower()
@@ -63,7 +64,7 @@ class DetectorAgent(BaseAgent):
         comment = state.original_comment
         comment_lower = comment.lower()
         code = state.code_snippet
-        ast_ctx = getattr(state, "ast_context", {}) or {}
+        ast_ctx = (getattr(state, "ast_context", {}) or {}) if self.use_treesitter else {}
 
         # --- Return type: prefer tree-sitter, fall back to LLM-parsed context ---
         if ast_ctx.get("return_type"):
@@ -135,15 +136,16 @@ class DetectorAgent(BaseAgent):
 
     def _parse_model_conclusion(self, response: str) -> tuple:
         upper_response = response.upper()
+        reasoning = response.split("CONCLUSION:")[0].strip() if "CONCLUSION:" in response else response.strip()
         if "CONCLUSION: INCONSISTENT" in upper_response:
-            return False, response.split("CONCLUSION:")[0].strip()
+            return False, reasoning
         if "CONCLUSION: CONSISTENT" in upper_response:
-            return True, ""
+            return True, reasoning
 
         # Fallback
         if "INCONSISTENT" in upper_response and "CONSISTENT" not in upper_response:
-            return False, response.strip()
-        return True, ""
+            return False, reasoning
+        return True, reasoning
 
     _STATIC_RETURN_EXAMPLES = """
 Benchmark Examples for Calibration:
