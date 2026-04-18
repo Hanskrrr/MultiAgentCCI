@@ -1,0 +1,14 @@
+{
+  "description": "Summary 类别错误差集 — 需重点分析的误判案例",
+  "model": "glm-4-plus",
+  "use_diff": true,
+  "parser": "treesitter",
+  "ids": [
+    "Summary_0",  "Summary_6",  "Summary_18", "Summary_20", "Summary_30",
+    "Summary_36", "Summary_40", "Summary_43", "Summary_46", "Summary_54",
+    "Summary_58", "Summary_60", "Summary_61", "Summary_63", "Summary_66",
+    "Summary_67", "Summary_69", "Summary_77", "Summary_79", "Summary_81",
+    "Summary_85", "Summary_87", "Summary_89", "Summary_90", "Summary_91",
+    "Summary_92", "Summary_94", "Summary_98", "Summary_99"
+  ]
+}

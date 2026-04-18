@@ -148,6 +148,54 @@ class DetectorAgent(BaseAgent):
 
         return hard_fail_reasons, signals
 
+    # ------------------------------------------------------------------
+    # Summary-specific checks
+    # ------------------------------------------------------------------
+
+    # Placeholder / low-information comments that are almost certainly stale
+    _PLACEHOLDER_PATTERNS = (
+        re.compile(r"^\s*DOCUMENT\s*ME\s*!?\s*$", re.IGNORECASE),
+        re.compile(r"^\s*TODO\s*:?\s*$", re.IGNORECASE),
+        re.compile(r"^\s*FIXME\s*:?\s*$", re.IGNORECASE),
+        re.compile(r"^\s*XXX\s*:?\s*$", re.IGNORECASE),
+        re.compile(r"^\s*\.\.\.\s*$"),
+    )
+
+    def _is_placeholder_summary(self, comment: str) -> bool:
+        """Detect placeholder/non-informative summary comments."""
+        stripped = comment.strip()
+        if not stripped:
+            return True
+        for pat in self._PLACEHOLDER_PATTERNS:
+            if pat.match(stripped):
+                return True
+        # A single-word summary like "Returns" or "Gets" is effectively a placeholder
+        words = re.findall(r"[A-Za-z]+", stripped)
+        if len(words) <= 1:
+            return True
+        return False
+
+    def _rule_check_summary(self, state: CodeCommentState) -> tuple:
+        """Rule checks for summary-type comments. Returns (hard_fails, signals)."""
+        hard_fail_reasons: List[str] = []
+        signals: List[str] = []
+
+        comment = state.original_comment
+
+        # --- Placeholder detection ---
+        if self._is_placeholder_summary(comment):
+            signals.append(
+                f"PLACEHOLDER SUMMARY: the comment '{comment.strip()[:40]}' "
+                f"carries no real description of what the method does. "
+                f"If the method body is non-trivial, the comment is INCONSISTENT."
+            )
+
+        # --- Structural diff signals ---
+        structural_signals = self._structural_diff_signals(state)
+        signals.extend(structural_signals)
+
+        return hard_fail_reasons, signals
+
     def _parse_model_conclusion(self, response: str) -> tuple:
         upper_response = response.upper()
         reasoning = response.split("CONCLUSION:")[0].strip() if "CONCLUSION:" in response else response.strip()
@@ -413,21 +461,52 @@ CONCLUSION: [CONSISTENT or INCONSISTENT]
             + """
 Classification Guidelines (IMPORTANT):
 
-=== Summary Rules (Primary Focus) ===
-1. Functional Accuracy: The summary must align with the current code behavior.
-2. Critical Drift: If the operation, object, or target described in the summary has changed, it is INCONSISTENT.
-3. Identifier/Class Changes: If the summary references specific class names or method targets that have been renamed, it is INCONSISTENT.
+=== Core Principle ===
+A method summary is a concise sentence describing WHAT the method does — its action, its subject (the thing being acted upon), and its effect.
+It is INCONSISTENT when the summary no longer accurately describes the method after the code change.
+It is CONSISTENT only when every key phrase in the summary still maps to something the current code actually does.
 
-=== General Rules ===
-4. Tolerate minor wording changes without semantic drift.
-5. CONSISTENT if: The summary accurately reflects the current code's purpose, objects, and behavior.
+=== What MUST be flagged as INCONSISTENT ===
 
-Benchmark Examples for Calibration:
-- Ex A (INCONSISTENT): Summary says "Creates elastic node as single member of a cluster", but code now creates an instance with existing settings -> Purpose changed.
-- Ex B (CONSISTENT): Summary says "Sends an email to the given address", code still does `smtp.send(to_addr, content)` -> Meaning unchanged.
+1. ACTION CHANGE: The summary's verb phrase ("creates", "returns", "checks", "initializes") no longer matches. E.g., summary says "initializes panelCommand" but code is now `getExportButton()` returning a button. INCONSISTENT.
+
+2. SUBJECT/OBJECT CHANGE: The thing described in the summary (what is returned / operated on / created) has changed. E.g., summary says "Add a tag to the set of filters" (object = tag) but code now takes `tagId` and `category` strings. Even if the "purpose feels similar", the OBJECT changed → INCONSISTENT.
+
+3. QUALIFIER/DETAIL NO LONGER TRUE: The summary mentions a specific qualifier ("as single member of a cluster", "with the default server URL") that the current code no longer satisfies. INCONSISTENT.
+
+4. PLACEHOLDER / VAGUE SUMMARY: A summary that is just "Returns", "DOCUMENT ME!", "TODO", a single word, or similarly non-descriptive IS INCONSISTENT whenever the method body is non-trivial. A real method deserves a real summary — placeholders do not honestly describe the code.
+
+5. INCOMPLETENESS: If the summary describes a SUBSET of the method's behavior (e.g., mentions one return path but the code has extra branches returning different things or adds a new condition), and the omission is significant (not a trivial internal helper), it is INCONSISTENT.
+
+6. SIGNATURE/STRUCTURAL DRIFT: When structural observations show RETURN TYPE CHANGED, PARAMETERS CHANGED, or METHOD NAME CHANGED, and the summary's description no longer maps cleanly onto the new signature, it is INCONSISTENT. Do not dismiss a parameter-count change as "implementation detail" when the summary presupposes the old signature.
+
+=== What counts as CONSISTENT (be strict — do NOT over-tolerate) ===
+
+A. PURE RENAMING / REFORMAT: The method was reformatted, a local variable was renamed, or a helper method is called, but the visible action/subject/qualifiers in the summary all still hold. CONSISTENT.
+
+B. INTERNAL ALGORITHMIC CHANGE WITH SAME CONTRACT: The method body switched algorithms (e.g., `for` loop replaced with `stream`, or `StringBuffer` replaced with `StringBuilder`) but the summary's action + subject + effect are all unchanged. CONSISTENT.
+
+C. WARNING — DO NOT USE THIS REASONING: Phrases like "the core functionality remains the same", "fundamental purpose is unchanged", "core behavior is preserved", "high-level purpose remains" are OFTEN WRONG defenses that mask real drift. If you find yourself reaching for one of these phrases, stop and re-check: did the subject change? did a qualifier stop being true? did a parameter disappear? If yes to ANY, it is INCONSISTENT.
+
+=== Using Observations ===
+- A PARAMETERS CHANGED signal means the method's inputs changed. Check if the summary implicitly assumed the old inputs.
+- A RETURN TYPE CHANGED signal means the method now produces a different thing. If the summary describes what is returned, it is almost certainly INCONSISTENT.
+- A PLACEHOLDER SUMMARY signal almost always means INCONSISTENT — the non-descriptive comment cannot possibly faithfully describe a real method body.
+- A METHOD NAME CHANGED signal is strong evidence of a rewrite → summary is likely outdated.
+
+Benchmark Examples:
+- Ex A (INCONSISTENT): Summary "Creates elastic node as single member of a cluster"; code was rewritten to "Creates an instance with existing settings" — the qualifier "single member of a cluster" is no longer true. INCONSISTENT.
+- Ex B (INCONSISTENT): Summary "This method initializes panelCommand"; code now `getExportButton()` returning button — subject changed entirely. INCONSISTENT.
+- Ex C (INCONSISTENT): Summary "Returns" alone; method body is non-trivial (e.g., delegates through a queue). Placeholder → INCONSISTENT.
+- Ex D (INCONSISTENT): Summary "Add a tag to the set of filters"; code now takes (tagId, category) strings and returns boolean — object of action changed. INCONSISTENT.
+- Ex E (CONSISTENT): Summary "Sends an email to the given address"; code still does `smtp.send(to_addr, content)`. Variables renamed but action/subject/effect unchanged → CONSISTENT.
 
 Output Requirement:
-Reasoning: <Compare summary semantics with current code behavior>
+Reasoning: Decompose the summary into (action, subject, qualifiers) and verify each against the current code:
+- ACTION: "<the verb phrase>" → still done by the code? YES/NO
+- SUBJECT: "<the object being acted upon>" → still this same thing? YES/NO
+- QUALIFIERS: "<specific modifiers/conditions>" → still all true? YES/NO
+- Brief conclusion: <1 sentence on whether summary still describes the method>
 CONCLUSION: [CONSISTENT or INCONSISTENT]
 """
         )
@@ -445,16 +524,19 @@ CONCLUSION: [CONSISTENT or INCONSISTENT]
         hard_fail_reasons = []
         if comment_type == "return":
             hard_fail_reasons, signals = self._rule_check_return(state)
-            state.rule_signals = signals
-            state.rule_hard_fails = hard_fail_reasons
-            if hard_fail_reasons:
-                state.is_consistent = False
-                state.inconsistency_reason = " | ".join(hard_fail_reasons)
-                state.detection_method = "rule"
-                state.log(
-                    f"[{self.name}] Rule-based return check flagged inconsistency: {state.inconsistency_reason[:120]}..."
-                )
-                return state
+        elif comment_type == "summary":
+            hard_fail_reasons, signals = self._rule_check_summary(state)
+
+        state.rule_signals = signals
+        state.rule_hard_fails = hard_fail_reasons
+        if hard_fail_reasons:
+            state.is_consistent = False
+            state.inconsistency_reason = " | ".join(hard_fail_reasons)
+            state.detection_method = "rule"
+            state.log(
+                f"[{self.name}] Rule-based {comment_type} check flagged inconsistency: {state.inconsistency_reason[:120]}..."
+            )
+            return state
 
         prompt = self._build_prompt(state, comment_type, signals)
 
