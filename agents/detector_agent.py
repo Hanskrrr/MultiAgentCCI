@@ -1,7 +1,9 @@
 import difflib
 import re
+from typing import Dict, List
 from .base_agent import BaseAgent
 from core.state import CodeCommentState
+from core.java_parser import parse_java_method
 
 
 class DetectorAgent(BaseAgent):
@@ -72,6 +74,14 @@ class DetectorAgent(BaseAgent):
         else:
             return_type = self._extract_return_type_from_context(state.interface_context)
 
+        # --- Hard rule 0: void method but @return has content → INCONSISTENT ---
+        if return_type and return_type.strip().lower() == "void":
+            return_content = re.sub(r"@return\s*", "", comment, flags=re.IGNORECASE).strip()
+            if return_content and len(return_content) > 2:
+                hard_fail_reasons.append(
+                    f"Method returns void but @return comment describes a value: '{return_content[:80]}'."
+                )
+
         norm_return = self._normalize_type_name(return_type) if return_type else ""
         mentions = self._extract_explicit_return_type_mentions(comment)
 
@@ -132,6 +142,10 @@ class DetectorAgent(BaseAgent):
                     "but @return comment does not mention exceptions."
                 )
 
+        # --- Structural diff signals (old_code vs new_code comparison) ---
+        structural_signals = self._structural_diff_signals(state)
+        signals.extend(structural_signals)
+
         return hard_fail_reasons, signals
 
     def _parse_model_conclusion(self, response: str) -> tuple:
@@ -185,9 +199,105 @@ Benchmark Examples for Calibration:
         diff = list(difflib.unified_diff(old_lines, new_lines, fromfile="old_code", tofile="new_code", lineterm=""))
         if not diff:
             return ""
-        # Keep only meaningful diff lines, limit length
         diff_text = "\n".join(diff[:60])
         return diff_text
+
+    # ------------------------------------------------------------------
+    # Structural diff: compare old and new code structure
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _extract_identifiers(code: str) -> set:
+        """Extract all camelCase / PascalCase identifiers from code."""
+        return set(re.findall(r"\b[a-zA-Z_]\w*\b", code))
+
+    def _structural_diff_signals(self, state: CodeCommentState) -> List[str]:
+        """Compare old_code vs new_code structurally. Return hard signals for the detector."""
+        old_code = getattr(state, "old_code_snippet", "") or ""
+        if not old_code.strip():
+            return []
+
+        signals: List[str] = []
+        new_code = state.code_snippet
+
+        # --- tree-sitter structural comparison ---
+        old_parsed = parse_java_method(old_code)
+        new_parsed = parse_java_method(new_code)
+
+        if old_parsed and new_parsed:
+            # Return type change
+            old_rt = old_parsed.get("return_type", "")
+            new_rt = new_parsed.get("return_type", "")
+            if old_rt and new_rt and old_rt != new_rt:
+                signals.append(
+                    f"RETURN TYPE CHANGED: '{old_rt}' -> '{new_rt}'. "
+                    f"If the comment references the old return type, it is INCONSISTENT."
+                )
+
+            # Parameter changes
+            old_params = {p["name"]: p["type"] for p in old_parsed.get("parameters", [])}
+            new_params = {p["name"]: p["type"] for p in new_parsed.get("parameters", [])}
+            removed = set(old_params) - set(new_params)
+            added = set(new_params) - set(old_params)
+            if removed or added:
+                parts = []
+                if removed:
+                    parts.append(f"removed params: {removed}")
+                if added:
+                    parts.append(f"added params: {added}")
+                signals.append(f"PARAMETERS CHANGED: {'; '.join(parts)}.")
+
+            # Throws changes
+            old_throws = set(old_parsed.get("throws", []))
+            new_throws = set(new_parsed.get("throws", []))
+            if old_throws != new_throws:
+                signals.append(
+                    f"THROWS CHANGED: {old_throws or 'none'} -> {new_throws or 'none'}."
+                )
+
+            # Method name change (rare but possible with overloads in dataset)
+            old_name = old_parsed.get("method_name", "")
+            new_name = new_parsed.get("method_name", "")
+            if old_name and new_name and old_name != new_name:
+                signals.append(f"METHOD NAME CHANGED: '{old_name}' -> '{new_name}'.")
+        elif not old_parsed or not new_parsed:
+            # Fallback: regex-based return type extraction for non-Java or parse failures
+            old_rt_match = re.search(r"\b(public|private|protected|static|\s)+([\w<>\[\]]+)\s+\w+\s*\(", old_code)
+            new_rt_match = re.search(r"\b(public|private|protected|static|\s)+([\w<>\[\]]+)\s+\w+\s*\(", new_code)
+            if old_rt_match and new_rt_match:
+                old_rt = old_rt_match.group(2).strip()
+                new_rt = new_rt_match.group(2).strip()
+                if old_rt != new_rt:
+                    signals.append(
+                        f"RETURN TYPE CHANGED: '{old_rt}' -> '{new_rt}'. "
+                        f"If the comment references the old return type, it is INCONSISTENT."
+                    )
+
+        # --- Identifier drift: find renamed identifiers between old and new code ---
+        old_ids = self._extract_identifiers(old_code)
+        new_ids = self._extract_identifiers(new_code)
+        comment_lower = state.original_comment.lower()
+
+        disappeared = old_ids - new_ids
+        appeared = new_ids - old_ids
+        # Check if any disappeared identifier is mentioned in the comment
+        for old_id in disappeared:
+            if len(old_id) < 4:
+                continue
+            if old_id.lower() in comment_lower:
+                # See if there's a plausible rename in new code
+                candidates = [n for n in appeared if len(n) >= 4 and n[0].lower() == old_id[0].lower()]
+                if candidates:
+                    signals.append(
+                        f"IDENTIFIER DRIFT: comment mentions '{old_id}' which no longer exists in new code. "
+                        f"Possible renames: {candidates[:3]}."
+                    )
+                else:
+                    signals.append(
+                        f"IDENTIFIER DRIFT: comment mentions '{old_id}' which no longer exists in new code."
+                    )
+
+        return signals
 
     def _build_prompt(self, state: CodeCommentState, comment_type: str, signals: list) -> str:
         diff_text = self._build_code_diff(state)
@@ -223,9 +333,11 @@ Task: Determine if the [Original Comment] is CONSISTENT with the [Current Code].
         if signals:
             signal_text = "\n".join([f"- {s}" for s in signals])
             signal_block = f"""
-[Rule-based Signals]
+[Rule-based Signals — HIGH PRIORITY]
 {signal_text}
-These are deterministic signals extracted from code/comment. Treat them as high-priority evidence.
+These are deterministic signals extracted from code analysis.
+Signals starting with RETURN TYPE CHANGED, IDENTIFIER DRIFT, or PARAMETERS CHANGED indicate
+structural code changes that very likely make the comment outdated. Treat them as strong evidence of INCONSISTENCY.
 """
 
         if comment_type == "param":
@@ -260,15 +372,22 @@ CONCLUSION: [CONSISTENT or INCONSISTENT]
             guidelines = """
 Classification Guidelines (IMPORTANT):
 
-=== @return Rules (Primary Focus) ===
-1. Return Class/Type Name Matching: If the comment mentions a SPECIFIC class name (e.g., "HornetQConnectionFactory", "JMenuItem", "HttpServletRequest") but the code returns a DIFFERENT class (e.g., "ActiveMQConnectionFactory", "ZapMenuItem", "AtmosphereRequest"), it is INCONSISTENT. Class names must match exactly — renaming a class is NOT paraphrasing.
-2. Unit / Precision Mismatch: If the comment specifies a unit (e.g., "in milliseconds") but the code uses a different unit (e.g., seconds), or a qualifier like "this same object" when the code returns a new object, it is INCONSISTENT.
-3. Missing Return Condition: If the code has conditional branches that return null, throw exceptions, or return a fallback value, but the comment omits these conditions, it is INCONSISTENT. Look carefully at ALL return paths and null checks.
-4. Semantic Over-specification: If the comment adds qualifiers, details, or attributions (e.g., "used by this SVGGraphics2D instance", "on the test VirtualHost") that no longer match the actual code, it is INCONSISTENT.
+=== Claim-by-Claim Verification (you MUST follow this) ===
+Break the comment into individual claims, then verify EACH against the current code:
 
-=== General Rules ===
-5. Tolerate ONLY Variable-to-NaturalLanguage Paraphrasing: A comment like "@return the parent type information" for code `return parentInfo` is CONSISTENT. However, substituting one CLASS NAME for another (e.g., "HornetQ" for "ActiveMQ") is NOT paraphrasing — it is INCONSISTENT.
-6. CONSISTENT if and only if: All class/type names mentioned in the comment match the code, the return behavior is accurately described, no important conditions (null, exceptions, edge cases) are omitted, and units/qualifiers are correct.
+1. CLASS/TYPE NAME: Does the comment mention a specific class name (e.g., "SqlParser", "AsyncAppenderBase", "HornetQConnectionFactory")? If so, does the code ACTUALLY return that exact class? A renamed class is INCONSISTENT.
+2. QUALIFIER/OWNER: Does the comment mention a specific owner, source, or context (e.g., "used by this SVGGraphics2D instance", "on the test VirtualHost", "the supplied foreground color")? Verify each qualifier still matches the current code. Extra or outdated qualifiers make it INCONSISTENT.
+3. UNIT/PRECISION: Does the comment mention a unit (e.g., "milliseconds", "seconds") or precision? If the code uses a different unit, it is INCONSISTENT.
+4. RETURN CONDITIONS: Does the comment describe return conditions (e.g., "or null if...", "false otherwise")? Are ALL conditions still present in the code? Missing conditions = INCONSISTENT.
+5. DESCRIPTIVE ACCURACY: Does the comment describe what is returned (e.g., "the union of the char[]s" vs "the char[]")? Does the description PRECISELY match what the code does? If the method is named "union()" but the comment just says "the char[]" without mentioning union, it is INCONSISTENT.
+
+=== If Code Change Diff is provided ===
+6. Check EVERY changed line in the diff. If any change invalidates ANY word or claim in the comment, it is INCONSISTENT.
+7. Pay special attention to: renamed variables/methods, changed return types, removed/added parameters, changed logic flow.
+
+=== Paraphrasing Rules ===
+8. Tolerate ONLY variable-name-to-natural-language (e.g., `parentInfo` described as "parent type information" is fine).
+9. Substituting one CLASS NAME for another is NEVER paraphrasing — it is INCONSISTENT.
 """
             examples_block = self._get_return_examples(state)
 
@@ -279,7 +398,11 @@ Classification Guidelines (IMPORTANT):
                 + examples_block
                 + """
 Output Requirement:
-Reasoning: <Compare @return semantics, return type/class names, and return-path conditions step by step>
+Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "<extract first claim from comment>" → matches code? YES/NO
+- Claim 2: "<extract second claim>" → matches code? YES/NO
+- ...
+If ANY claim is NO → INCONSISTENT. If ALL claims are YES → CONSISTENT.
 CONCLUSION: [CONSISTENT or INCONSISTENT]
 """
             )

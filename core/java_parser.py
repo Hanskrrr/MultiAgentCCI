@@ -137,14 +137,20 @@ def parse_java_method(code: str) -> Optional[Dict]:
         return_expressions = _collect_returns_in_scope(body_node, source)
         for expr in return_expressions:
             stripped = expr.strip()
-            if stripped == "null" or "null" in stripped.split():
+            # Only flag "return null;" — not "return x != null;" or "return x == null ? a : b"
+            if stripped == "null":
                 has_null_return = True
             if _EMPTY_PATTERNS.search(stripped):
                 has_empty_return = True
         if not has_null_return:
             for ret_node in _find_all(body_node, "return_statement"):
-                if _find_all(ret_node, "null_literal"):
-                    has_null_return = True
+                # Only flag if the DIRECT child of return_statement is null_literal
+                # (not null_literal buried inside a binary_expression or ternary)
+                for child in ret_node.named_children:
+                    if child.type == "null_literal":
+                        has_null_return = True
+                        break
+                if has_null_return:
                     break
 
     params_str = ", ".join(f"{p['type']} {p['name']}" for p in parameters)
