@@ -12,7 +12,10 @@ def main():
         "--model",
         type=str,
         default="glm-4-flash",
-        choices=["glm-4-flash", "glm-4-plus", "glm-4.7", "glm-4.7-flash", "glm-5", "deepseek-chat", "deepseek-reasoner"],
+        choices=["glm-4-flash", "glm-4-plus", "glm-4.7", "glm-4.7-flash", "glm-5",
+                 "deepseek-chat", "deepseek-reasoner",
+                 "gpt-4o", "gpt-4o-mini", "gpt-4.1", "gpt-4.1-mini", "o3-mini",
+                 "gemini-2.0-flash", "gemini-2.5-flash", "gemini-2.5-pro"],
         help="指定使用的模型名",
     )
     parser.add_argument(

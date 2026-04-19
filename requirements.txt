@@ -12,3 +12,5 @@ rank-bm25>=0.2.2
 tree-sitter>=0.22.0
 tree-sitter-java>=0.23.0
 sentence-transformers>=2.7.0
+# Gemini 支持（可选，需要翻墙）：
+google-genai>=1.0.0

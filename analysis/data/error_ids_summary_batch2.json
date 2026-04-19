@@ -1,0 +1,14 @@
+{
+  "description": "Summary 类别错误批次2 — 新增误判案例",
+  "model": "glm-4-plus",
+  "use_diff": true,
+  "parser": "treesitter",
+  "ids": [
+    "Summary_103", "Summary_104", "Summary_105", "Summary_106", "Summary_108",
+    "Summary_109", "Summary_110", "Summary_115", "Summary_119", "Summary_121",
+    "Summary_126", "Summary_127", "Summary_131", "Summary_143", "Summary_147",
+    "Summary_149", "Summary_153", "Summary_169", "Summary_170", "Summary_172",
+    "Summary_179", "Summary_181", "Summary_184", "Summary_189", "Summary_194",
+    "Summary_195"
+  ]
+}

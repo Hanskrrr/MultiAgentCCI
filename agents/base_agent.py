@@ -12,11 +12,46 @@ from openai import OpenAI
 from zhipuai import ZhipuAI
 from dotenv import load_dotenv
 
+try:
+    from google import genai as google_genai
+    from google.genai import types as google_genai_types
+    _GEMINI_AVAILABLE = True
+except ImportError:
+    _GEMINI_AVAILABLE = False
+
 # 加载环境变量 (需要您在框架代码目录 `multi_agent_framework` 下创建一个 .env 文件)
 env_path = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"
 )
 load_dotenv(dotenv_path=env_path)
+
+# 代理设置：.env 里写的是 127.0.0.1，但在 WSL2 里需要用 Windows 宿主机 IP。
+# 若检测到在 WSL 环境中运行，自动把 127.0.0.1 替换为网关 IP。
+def _apply_proxy():
+    proxy = os.getenv("HTTPS_PROXY") or os.getenv("HTTP_PROXY")
+    if not proxy:
+        return
+    try:
+        with open("/proc/version") as f:
+            is_wsl = "microsoft" in f.read().lower()
+    except OSError:
+        is_wsl = False
+    if is_wsl and "127.0.0.1" in proxy:
+        try:
+            import subprocess
+            result = subprocess.run(
+                ["ip", "route", "show", "default"],
+                capture_output=True, text=True, timeout=2,
+            )
+            gateway = result.stdout.split()[2]
+            fixed = proxy.replace("127.0.0.1", gateway)
+            os.environ["HTTP_PROXY"] = fixed
+            os.environ["HTTPS_PROXY"] = fixed
+            os.environ["ALL_PROXY"] = fixed
+        except Exception:
+            pass
+
+_apply_proxy()
 
 
 class BaseAgent(ABC):
@@ -89,7 +124,44 @@ class BaseAgent(ABC):
             )
             return response.choices[0].message.content or ""
 
+        elif (self.model_name.startswith("gpt-")
+              or self.model_name.startswith("o1")
+              or self.model_name.startswith("o3")):
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                raise ValueError("请在 .env 文件中配置 OPENAI_API_KEY。")
+
+            client = OpenAI(api_key=api_key)
+            response = client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                temperature=0.1,
+            )
+            return response.choices[0].message.content or ""
+
+        elif self.model_name.startswith("gemini-"):
+            if not _GEMINI_AVAILABLE:
+                raise ImportError("请先安装新版 Gemini SDK: pip install google-genai")
+            api_key = os.getenv("GEMINI_API_KEY")
+            if not api_key:
+                raise ValueError("请在 .env 文件中配置 GEMINI_API_KEY。")
+
+            client = google_genai.Client(api_key=api_key)
+            system_text = messages[0]["content"] if messages[0]["content"] else None
+            user_text = messages[1]["content"] if len(messages) > 1 else ""
+            config = google_genai_types.GenerateContentConfig(
+                temperature=0.1,
+                system_instruction=system_text,
+            )
+            response = client.models.generate_content(
+                model=self.model_name,
+                contents=user_text,
+                config=config,
+            )
+            return response.text or ""
+
         else:
             raise ValueError(
-                f"不支持的模型名称: {self.model_name}。目前仅支持 glm-* 或 deepseek-*。"
+                f"不支持的模型名称: {self.model_name}。"
+                f"目前支持 glm-* / deepseek-* / gpt-* / o1* / o3* / gemini-*。"
             )
