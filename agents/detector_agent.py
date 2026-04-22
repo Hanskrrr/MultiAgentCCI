@@ -13,9 +13,10 @@ class DetectorAgent(BaseAgent):
     判断代码与注释是否具有一致性。
     """
 
-    def __init__(self, model_name: str = "glm-4-flash", retriever=None, use_treesitter: bool = True):
+    def __init__(self, model_name: str = "glm-4-flash", retriever=None, use_treesitter: bool = True, summary_retriever=None):
         super().__init__(name="DetectorAgent", model_name=model_name)
         self.retriever = retriever
+        self.summary_retriever = summary_retriever
         self.use_treesitter = use_treesitter
 
     def _detect_comment_type(self, comment: str) -> str:
@@ -236,6 +237,32 @@ Benchmark Examples for Calibration:
             return self.retriever.format_examples(examples)
         except Exception:
             return self._STATIC_RETURN_EXAMPLES
+
+    _STATIC_SUMMARY_EXAMPLES = """
+Benchmark Examples for Calibration:
+- Ex A (INCONSISTENT, action/qualifier): Summary "Creates elastic node as single member of a cluster"; code rewritten to take settings only — qualifier "single member of a cluster" no longer true.
+- Ex B (INCONSISTENT, subject): Summary "This method initializes panelCommand"; code is now getExportButton() returning a button — subject changed entirely.
+- Ex C (INCONSISTENT, placeholder): Summary "Returns" alone on a method with non-trivial body.
+- Ex D (INCONSISTENT, subject): Summary "Add a tag to the set of filters"; code now takes (tagId, category) and returns boolean — object of action changed.
+- Ex E (CONSISTENT, renamed helper): Summary "Sends an email to the given address"; code still smtp.send(to, body), variables renamed only.
+- Ex F (CONSISTENT, added guard): Summary "Checks if this potato is baked"; method still checks, just added timer that throws on timeout — main action unchanged.
+"""
+
+    def _get_summary_examples(self, state: CodeCommentState) -> str:
+        if self.summary_retriever is None:
+            return self._STATIC_SUMMARY_EXAMPLES
+        try:
+            examples = self.summary_retriever.retrieve(
+                comment=state.original_comment,
+                code=state.code_snippet,
+                top_k=3,
+                ensure_mix=True,
+            )
+            if not examples:
+                return self._STATIC_SUMMARY_EXAMPLES
+            return self.summary_retriever.format_examples(examples)
+        except Exception:
+            return self._STATIC_SUMMARY_EXAMPLES
 
     def _build_code_diff(self, state: CodeCommentState) -> str:
         """Generate a unified diff between old and new code if old_code is available."""
@@ -509,6 +536,7 @@ Reasoning: Decompose the summary into (action, subject, qualifiers) and verify e
 - Brief conclusion: <1 sentence on whether summary still describes the method>
 CONCLUSION: [CONSISTENT or INCONSISTENT]
 """
+            + self._get_summary_examples(state)
         )
 
     def process(self, state: CodeCommentState) -> CodeCommentState:

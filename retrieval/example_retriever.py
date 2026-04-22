@@ -82,9 +82,6 @@ def _smart_truncate(code: str, max_lines: int = 15) -> str:
 # ---------------------------------------------------------------------------
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-_CACHE_DIR = os.path.join(_HERE, "cache")
-_EMBED_PATH = os.path.join(_CACHE_DIR, "embeddings.npy")
-_EXPLAIN_PATH = os.path.join(_CACHE_DIR, "explanations.json")
 _EMBED_MODEL_NAME = "all-MiniLM-L6-v2"
 
 
@@ -95,6 +92,7 @@ class ExampleRetriever:
         self,
         data_dir: Optional[str] = None,
         alpha: float = 0.5,
+        cache_dir: Optional[str] = None,
     ):
         self._examples: List[Dict] = []
         self._bm25: Optional[BM25Okapi] = None
@@ -102,6 +100,23 @@ class ExampleRetriever:
         self._inconsistent_indices: List[int] = []
         self._data_dir = data_dir or self._default_data_dir()
         self.alpha = alpha
+
+        # Derive cache directory: explicit > auto from data_dir category name > legacy default
+        if cache_dir:
+            self._cache_dir = cache_dir
+        else:
+            category = os.path.basename(os.path.normpath(self._data_dir)).lower()
+            candidate = os.path.join(_HERE, "cache", category)
+            legacy = os.path.join(_HERE, "cache")
+            # Backward compat: if category-specific dir doesn't exist but legacy does, use legacy
+            if not os.path.isdir(candidate) and os.path.isdir(legacy) and \
+               os.path.exists(os.path.join(legacy, "embeddings.npy")):
+                self._cache_dir = legacy
+            else:
+                self._cache_dir = candidate
+
+        self._embed_path = os.path.join(self._cache_dir, "embeddings.npy")
+        self._explain_path = os.path.join(self._cache_dir, "explanations.json")
 
         # Loaded lazily
         self._embeddings: Optional[np.ndarray] = None
@@ -154,9 +169,9 @@ class ExampleRetriever:
             self._bm25 = BM25Okapi(corpus)
 
         # Try to load pre-built embedding cache
-        if os.path.exists(_EMBED_PATH):
+        if os.path.exists(self._embed_path):
             try:
-                embs = np.load(_EMBED_PATH)
+                embs = np.load(self._embed_path)
                 if embs.shape[0] == len(examples):
                     self._embeddings = embs
                     self._load_embed_model()
@@ -169,9 +184,9 @@ class ExampleRetriever:
                 print(f"[ExampleRetriever] Warning: failed to load embeddings: {e}")
 
         # Try to load pre-built explanations
-        if os.path.exists(_EXPLAIN_PATH):
+        if os.path.exists(self._explain_path):
             try:
-                with open(_EXPLAIN_PATH, "r", encoding="utf-8") as f:
+                with open(self._explain_path, "r", encoding="utf-8") as f:
                     self._explanations = json.load(f)
             except Exception as e:
                 print(f"[ExampleRetriever] Warning: failed to load explanations: {e}")

@@ -1,21 +1,21 @@
 """Offline pre-computation script for hybrid retrieval.
 
-Generates two cache files under retrieval/cache/:
+Generates two cache files under retrieval/cache/<category>/:
   - embeddings.npy      : shape [N, 384], sentence-transformers embeddings
   - explanations.json   : {str(index): "one-sentence explanation"}
 
 Usage examples:
-  # Step 1: build embedding index only (fast, ~2-3 min for 17740 samples)
+  # Build Return index (default)
   python retrieval/build_index.py --skip-explain
-
-  # Step 2: generate LLM explanations (slow, supports resume)
   python retrieval/build_index.py --model glm-4-flash --explain-only --batch-size 50
-
-  # Both steps in one run
   python retrieval/build_index.py --model glm-4-flash --batch-size 50
 
+  # Build Summary index
+  python retrieval/build_index.py --category Summary --skip-explain
+  python retrieval/build_index.py --category Summary --model glm-4-flash --batch-size 50
+
   # Test with a small subset first
-  python retrieval/build_index.py --model glm-4-flash --limit 200
+  python retrieval/build_index.py --category Return --model glm-4-flash --limit 200
 """
 import argparse
 import json
@@ -34,12 +34,26 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.join(HERE, "..")
 sys.path.insert(0, PROJECT_ROOT)
 
-CACHE_DIR = os.path.join(HERE, "cache")
-DATA_DIR = os.path.join(PROJECT_ROOT, "dataset", "just_in_time", "Return")
-EMBED_PATH = os.path.join(CACHE_DIR, "embeddings.npy")
-EXPLAIN_PATH = os.path.join(CACHE_DIR, "explanations.json")
-
 EMBED_MODEL_NAME = "all-MiniLM-L6-v2"
+
+# These are set dynamically in main() based on --category
+CACHE_DIR: str = ""
+DATA_DIR: str = ""
+EMBED_PATH: str = ""
+EXPLAIN_PATH: str = ""
+
+
+def _init_paths(category: str):
+    """Set global path variables based on the chosen category."""
+    global CACHE_DIR, DATA_DIR, EMBED_PATH, EXPLAIN_PATH
+    CACHE_DIR = os.path.join(HERE, "cache", category.lower())
+    DATA_DIR = os.path.join(PROJECT_ROOT, "dataset", "just_in_time", category)
+    EMBED_PATH = os.path.join(CACHE_DIR, "embeddings.npy")
+    EXPLAIN_PATH = os.path.join(CACHE_DIR, "explanations.json")
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    print(f"[*] Category  : {category}")
+    print(f"[*] Data dir  : {DATA_DIR}")
+    print(f"[*] Cache dir : {CACHE_DIR}")
 
 
 def load_corpus(limit: int = 0):
@@ -83,13 +97,12 @@ def build_embeddings(examples, batch_size: int = 256):
 
     print()
     embeddings = np.vstack(all_embeddings).astype("float32")
-    os.makedirs(CACHE_DIR, exist_ok=True)
     np.save(EMBED_PATH, embeddings)
     print(f"[+] Saved embeddings: {EMBED_PATH}  shape={embeddings.shape}")
     return embeddings
 
 
-def _call_llm_for_explanation(item: dict, idx: int, model_name: str) -> str:
+def _call_llm_for_explanation(item: dict, idx: int, model_name: str, category: str = "Return") -> str:
     """Call LLM once to get a one-sentence explanation for why this example has its label."""
     from agents.base_agent import BaseAgent
 
@@ -113,8 +126,9 @@ def _call_llm_for_explanation(item: dict, idx: int, model_name: str) -> str:
     if parsed and parsed.get("full_signature"):
         sig_line = f"Code signature: {parsed['full_signature']}\n"
 
+    comment_kind = "method summary comment" if category == "Summary" else "@return comment"
     prompt = (
-        f"Given this @return comment and code pair labeled as {label}:\n"
+        f"Given this {comment_kind} and code pair labeled as {label}:\n"
         f"Comment: {item['comment']}\n"
         f"{gt_line}"
         f"{sig_line}"
@@ -129,9 +143,7 @@ def _call_llm_for_explanation(item: dict, idx: int, model_name: str) -> str:
         return f"[explain failed: {e}]"
 
 
-def build_explanations(examples, model_name: str, batch_size: int = 50):
-    os.makedirs(CACHE_DIR, exist_ok=True)
-
+def build_explanations(examples, model_name: str, batch_size: int = 50, category: str = "Return"):
     existing: dict = {}
     if os.path.exists(EXPLAIN_PATH):
         with open(EXPLAIN_PATH, "r", encoding="utf-8") as f:
@@ -146,7 +158,7 @@ def build_explanations(examples, model_name: str, batch_size: int = 50):
         if key in existing:
             continue
 
-        explanation = _call_llm_for_explanation(item, idx, model_name)
+        explanation = _call_llm_for_explanation(item, idx, model_name, category=category)
         existing[key] = explanation
         saved += 1
 
@@ -167,6 +179,9 @@ def build_explanations(examples, model_name: str, batch_size: int = 50):
 
 def main():
     parser = argparse.ArgumentParser(description="Build hybrid retrieval index")
+    parser.add_argument("--category", type=str, default="Return",
+                        choices=["Return", "Summary"],
+                        help="Which category to build index for (default: Return)")
     parser.add_argument("--model", type=str, default="glm-4-flash",
                         help="LLM model name for explanation generation")
     parser.add_argument("--limit", type=int, default=0,
@@ -181,6 +196,7 @@ def main():
                         help="Skip embedding generation, only build explanations")
     args = parser.parse_args()
 
+    _init_paths(args.category)
     print("[*] Loading corpus...")
     examples = load_corpus(limit=args.limit)
     print(f"[*] Corpus size: {len(examples)} examples")
@@ -198,7 +214,7 @@ def main():
 
     if not args.skip_explain:
         print(f"\n[*] Generating LLM explanations using model: {args.model}")
-        build_explanations(examples, model_name=args.model, batch_size=args.batch_size)
+        build_explanations(examples, model_name=args.model, batch_size=args.batch_size, category=args.category)
     else:
         print("[*] Skipping LLM explanation generation (--skip-explain).")
 

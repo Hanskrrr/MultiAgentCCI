@@ -19,11 +19,32 @@ class WorkflowOrchestrator:
         self.use_diff = use_diff
         self.parser = ContextParserAgent(model_name=model_name, parser_mode=parser_mode)
         self.retriever = ExampleRetriever()
-        self.detector = DetectorAgent(model_name=model_name, retriever=self.retriever, use_treesitter=(parser_mode == "treesitter"))
+        self.summary_retriever = ExampleRetriever(
+            data_dir=self._summary_data_dir(),
+            cache_dir=self._summary_cache_dir(),
+        )
+        self.detector = DetectorAgent(
+            model_name=model_name,
+            retriever=self.retriever,
+            use_treesitter=(parser_mode == "treesitter"),
+            summary_retriever=self.summary_retriever,
+        )
         self.rectifier = RectifierAgent(model_name=model_name)
         self.reviewer = ReviewerAgent(model_name=model_name)
 
         self.max_retries = max_retries
+
+    @staticmethod
+    def _summary_data_dir() -> str:
+        import os
+        here = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(here, "..", "dataset", "just_in_time", "Summary")
+
+    @staticmethod
+    def _summary_cache_dir() -> str:
+        import os
+        here = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(here, "..", "retrieval", "cache", "summary")
 
     def run(self, code_snippet: str, original_comment: str, old_code_snippet: str = "") -> CodeCommentState:
         """
