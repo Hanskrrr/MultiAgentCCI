@@ -59,6 +59,17 @@ def main():
         action="store_true",
         help="启用 JIT diff 模式：将 old_code 与 new_code 的变化注入 Detector prompt",
     )
+    parser.add_argument(
+        "--trace-rectify",
+        action="store_true",
+        help="输出逐样本修正追踪报告到 analysis/reports/rectify_trace_<category>.md",
+    )
+    parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=2,
+        help="Reviewer 审查不通过时的最大重试次数 (默认 2，设为 1 则不重试)",
+    )
     args = parser.parse_args()
 
     print("===================================================")
@@ -96,7 +107,7 @@ def main():
     print(f"[*] 数据集加载完成，共计 {len(dataset)} 条有效数据。\n")
 
     # 初始化工作流引擎
-    orchestrator = WorkflowOrchestrator(model_name=args.model, max_retries=2, detect_only=args.detect_only, verbose=args.verbose, parser_mode=args.parser, use_diff=args.use_diff)
+    orchestrator = WorkflowOrchestrator(model_name=args.model, max_retries=args.max_retries, detect_only=args.detect_only, verbose=args.verbose, parser_mode=args.parser, use_diff=args.use_diff)
 
     # 用于收集评估结果的容器
     y_true_detection = []
@@ -105,6 +116,9 @@ def main():
     sources_rectification = []
     ground_truths_rectification = []
     generated_rectifications = []
+    rectify_sample_ids = []
+    rectify_code_snippets = []
+    rectify_detected = []
 
     # 2. 遍历数据集进行批量测试
     for i, data in enumerate(dataset):
@@ -121,12 +135,14 @@ def main():
         y_true_detection.append(data["label_consistent"])
         y_pred_detection.append(result_state.is_consistent)
 
-        # 收集修正评估数据 (仅对真实情况为"不一致"的样本进行修正质量评估)
         if data["label_consistent"] is False:
             sources_rectification.append(data["original_comment"])
             ground_truths_rectification.append(data["ground_truth_comment"])
-            # 若智能体也认为不一致并生成了修正注释，则使用新生成的；若漏报，则算作未修改
-            if result_state.is_consistent is False and result_state.rectified_comment:
+            rectify_sample_ids.append(data["id"])
+            rectify_code_snippets.append(data["code_snippet"])
+            detected = result_state.is_consistent is False
+            rectify_detected.append(detected)
+            if detected and result_state.rectified_comment:
                 generated_rectifications.append(result_state.rectified_comment)
             else:
                 generated_rectifications.append(data["original_comment"])
@@ -168,10 +184,20 @@ def main():
     if args.detect_only:
         rectification_metrics = None
     else:
+        trace_path = None
+        if args.trace_rectify:
+            os.makedirs(os.path.join("analysis", "reports"), exist_ok=True)
+            cat_tag = args.category.lower() if args.category else "all"
+            trace_path = os.path.join("analysis", "reports", f"rectify_trace_{cat_tag}.md")
+
         rectification_metrics = evaluator.evaluate_rectification(
             sources=sources_rectification,
             ground_truths=ground_truths_rectification,
             generated_comments=generated_rectifications,
+            sample_ids=rectify_sample_ids if args.trace_rectify else None,
+            code_snippets=rectify_code_snippets if args.trace_rectify else None,
+            detected_flags=rectify_detected if args.trace_rectify else None,
+            trace_file=trace_path,
         )
 
     # 4. 打印报告

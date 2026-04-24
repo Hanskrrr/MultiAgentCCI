@@ -1,3 +1,4 @@
+import sys
 from typing import List, Dict
 from sklearn.metrics import (
     accuracy_score,
@@ -110,10 +111,17 @@ class Evaluator:
 
     @staticmethod
     def evaluate_rectification(
-        sources: List[str], ground_truths: List[str], generated_comments: List[str]
+        sources: List[str],
+        ground_truths: List[str],
+        generated_comments: List[str],
+        sample_ids: List[str] = None,
+        code_snippets: List[str] = None,
+        detected_flags: List[bool] = None,
+        trace_file: str = None,
     ) -> Dict[str, float]:
         """
-        评估生成的修正注释质量（用于在真实标签为不一致的测试集上对比）
+        评估生成的修正注释质量。
+        当 trace_file 不为 None 时，输出逐样本追踪报告到该路径。
         """
         if len(ground_truths) != len(generated_comments) or len(sources) != len(
             generated_comments
@@ -123,20 +131,27 @@ class Evaluator:
         bleu_scores = []
         sari_scores = []
         gleu_scores = []
-        meteor_scores = []
+        meteor_scores_list = []
         xmatch_count = 0
 
-        for src, ref, hyp in zip(sources, ground_truths, generated_comments):
-            # 1. Exact Match (xMatch)
+        total = len(generated_comments)
+        print(f"  [评估] 正在计算修正指标，共 {total} 条样本...")
+
+        Evaluator._get_sari_metric()
+
+        for idx, (src, ref, hyp) in enumerate(zip(sources, ground_truths, generated_comments), 1):
             if ref.strip() == hyp.strip():
                 xmatch_count += 1
 
-            # 2. 传统生成指标
             bleu_scores.append(Evaluator._calculate_bleu4(ref, hyp))
             sari_scores.append(Evaluator._calculate_sari(src, ref, hyp))
             gleu_scores.append(Evaluator._calculate_gleu(ref, hyp))
-            meteor_scores.append(Evaluator._calculate_meteor(ref, hyp))
+            meteor_scores_list.append(Evaluator._calculate_meteor(ref, hyp))
 
+            if idx % 10 == 0 or idx == total:
+                print(f"  [评估] 进度: {idx}/{total} ({idx * 100 // total}%)", flush=True)
+
+        print("  [评估] 计算完成。", flush=True)
         total = len(bleu_scores)
         if total == 0:
             return {"Samples_Evaluated": 0}
@@ -144,8 +159,20 @@ class Evaluator:
         avg_bleu = sum(bleu_scores) / total
         avg_sari = sum(sari_scores) / total
         avg_gleu = sum(gleu_scores) / total
-        avg_meteor = sum(meteor_scores) / total
+        avg_meteor = sum(meteor_scores_list) / total
         xmatch_rate = xmatch_count / total
+
+        # --- Trace report ---
+        if trace_file and sample_ids and len(sample_ids) == total:
+            Evaluator._write_trace_report(
+                trace_file, sample_ids, sources, ground_truths,
+                generated_comments, code_snippets, detected_flags,
+                bleu_scores, sari_scores, gleu_scores, meteor_scores_list,
+                {"xMatch (%)": round(xmatch_rate * 100, 2), "BLEU-4": round(avg_bleu, 4),
+                 "GLEU": round(avg_gleu, 4), "Meteor": round(avg_meteor, 4),
+                 "SARI": round(avg_sari, 4), "Samples_Evaluated": total},
+            )
+            print(f"  [评估] 逐样本追踪报告已保存: {trace_file}")
 
         return {
             "xMatch (%)": round(xmatch_rate * 100, 2),
@@ -155,6 +182,63 @@ class Evaluator:
             "SARI": round(avg_sari, 4),
             "Samples_Evaluated": total,
         }
+
+    @staticmethod
+    def _write_trace_report(
+        path: str, ids: List[str], sources: List[str],
+        refs: List[str], hyps: List[str],
+        codes: List[str], detected: List[bool],
+        bleu: List[float], sari: List[float],
+        gleu: List[float], meteor: List[float],
+        summary: Dict,
+    ):
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("# Rectifier 逐样本追踪报告\n\n")
+            f.write("## 汇总指标\n\n")
+            for k, v in summary.items():
+                f.write(f"- **{k}**: {v}\n")
+            f.write("\n")
+
+            # Summary table sorted by SARI ascending (worst first)
+            ranked = sorted(range(len(ids)), key=lambda i: sari[i])
+            f.write("## 汇总一览（按 SARI 升序，最差排前）\n\n")
+            f.write("| # | ID | 检测到 | xMatch | BLEU-4 | SARI | METEOR | 原注释(前60) | 生成(前60) |\n")
+            f.write("|---|---|---|---|---|---|---|---|---|\n")
+            for rank, i in enumerate(ranked, 1):
+                det_mark = "✓" if (detected and detected[i]) else "✗(漏检)"
+                xm = "✓" if refs[i].strip() == hyps[i].strip() else ""
+                src_short = sources[i][:60].replace("|", "\\|").replace("\n", " ")
+                hyp_short = hyps[i][:60].replace("|", "\\|").replace("\n", " ")
+                f.write(
+                    f"| {rank} | `{ids[i]}` | {det_mark} | {xm} "
+                    f"| {bleu[i]:.3f} | {sari[i]:.3f} | {meteor[i]:.3f} "
+                    f"| {src_short} | {hyp_short} |\n"
+                )
+
+            f.write("\n---\n\n## 逐样本详情\n\n")
+            for i in ranked:
+                det_mark = "✓ 已检测" if (detected and detected[i]) else "✗ 漏检(使用原注释)"
+                f.write(f"### [{i+1}/{len(ids)}] `{ids[i]}`\n\n")
+                f.write(f"| 指标 | 值 |\n|---|---|\n")
+                f.write(f"| 检测状态 | {det_mark} |\n")
+                f.write(f"| BLEU-4 | {bleu[i]:.4f} |\n")
+                f.write(f"| SARI | {sari[i]:.4f} |\n")
+                f.write(f"| GLEU | {gleu[i]:.4f} |\n")
+                f.write(f"| METEOR | {meteor[i]:.4f} |\n")
+                f.write(f"| xMatch | {'✓' if refs[i].strip() == hyps[i].strip() else '✗'} |\n\n")
+
+                f.write(f"**原注释 (source)**\n```\n{sources[i]}\n```\n\n")
+                f.write(f"**标准注释 (ground truth)**\n```\n{refs[i]}\n```\n\n")
+                f.write(f"**生成注释 (generated)**\n```\n{hyps[i]}\n```\n\n")
+
+                if codes and i < len(codes):
+                    code_lines = codes[i].split("\n")
+                    code_display = "\n".join(code_lines[:30])
+                    if len(code_lines) > 30:
+                        code_display += "\n// ... (truncated)"
+                    f.write(f"**代码片段**\n```java\n{code_display}\n```\n\n")
+
+                f.write("---\n\n")
 
     @staticmethod
     def generate_report(detection_metrics: Dict, rectification_metrics: Dict = None):

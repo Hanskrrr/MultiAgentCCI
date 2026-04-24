@@ -286,6 +286,49 @@ class ExampleRetriever:
             parts.append("")
         return "\n".join(parts)
 
+    def retrieve_rectification_examples(
+        self,
+        comment: str,
+        code: str,
+        top_k: int = 3,
+    ) -> List[Dict]:
+        """Retrieve only INCONSISTENT examples that have ground_truth corrections."""
+        self._ensure_loaded()
+        if not self._bm25 or not self._examples:
+            return []
+
+        scores = self._hybrid_scores(comment, code)
+        inconsistent_set = set(self._inconsistent_indices)
+        ranked = sorted(
+            (i for i in range(len(scores)) if i in inconsistent_set),
+            key=lambda i: scores[i],
+            reverse=True,
+        )
+
+        results = []
+        for idx in ranked[:top_k]:
+            ex = self._examples[idx]
+            if not ex["ground_truth"]:
+                continue
+            results.append({
+                "comment": ex["comment"],
+                "ground_truth": ex["ground_truth"],
+                "code_truncated": _smart_truncate(ex["code"]),
+            })
+        return results
+
+    def format_rectification_examples(self, examples: List[Dict]) -> str:
+        """Format retrieved correction examples for the Rectifier prompt."""
+        if not examples:
+            return ""
+        parts = ["[Similar Correction Examples — follow the same minimal-edit style]"]
+        for i, ex in enumerate(examples, 1):
+            parts.append(f"--- Example {i} ---")
+            parts.append(f"Original: {ex['comment']}")
+            parts.append(f"Corrected: {ex['ground_truth']}")
+            parts.append("")
+        return "\n".join(parts)
+
     @property
     def using_hybrid(self) -> bool:
         return self._embeddings is not None and self._embed_model is not None
