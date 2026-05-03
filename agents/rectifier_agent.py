@@ -10,9 +10,10 @@ class RectifierAgent(BaseAgent):
     支持 RAG 检索相似修正案例作为 few-shot 示范。
     """
 
-    def __init__(self, model_name: str = "glm-4-flash", retriever=None):
+    def __init__(self, model_name: str = "glm-4-flash", retriever=None, summary_retriever=None):
         super().__init__(name="RectifierAgent", model_name=model_name)
         self.retriever = retriever
+        self.summary_retriever = summary_retriever
 
     def _build_code_diff(self, state: CodeCommentState) -> str:
         old = getattr(state, "old_code_snippet", "") or ""
@@ -26,17 +27,22 @@ class RectifierAgent(BaseAgent):
         return "\n".join(diff[:50])
 
     def _get_rag_examples(self, state: CodeCommentState) -> str:
-        if self.retriever is None:
+        comment_type = getattr(state, "detected_comment_type", "")
+        if comment_type == "summary" and self.summary_retriever is not None:
+            retriever = self.summary_retriever
+        else:
+            retriever = self.retriever
+        if retriever is None:
             return ""
         try:
-            examples = self.retriever.retrieve_rectification_examples(
+            examples = retriever.retrieve_rectification_examples(
                 comment=state.original_comment,
                 code=state.code_snippet,
                 top_k=3,
             )
             if not examples:
                 return ""
-            return self.retriever.format_rectification_examples(examples)
+            return retriever.format_rectification_examples(examples)
         except Exception:
             return ""
 
@@ -83,6 +89,20 @@ class RectifierAgent(BaseAgent):
                 "Do NOT add @return, @throws, or Javadoc block wrappers (/** ... */)."
             )
 
+        summary_rules = ""
+        if comment_type == "summary":
+            summary_rules = """
+4. SUMMARY-SPECIFIC RULES (CRITICAL for summary comments):
+   - First, identify the EXACT words that are factually wrong. Then replace ONLY those words.
+   - Do NOT restructure the sentence or change the verb/subject.
+   - If the original says "Unsubscribes the resource from this channel" and code uses "repo",
+     the fix is "Unsubscribes the resource from this repo" — change ONE word, keep everything else.
+   - If the original says "Creates elastic node as single member of a cluster" and only "Create/Creates" is wrong,
+     change ONLY that word. Do NOT rewrite the rest of the sentence.
+   - Do NOT infer new descriptions from the code. Only fix what the detection report says is wrong.
+   - When in doubt, change LESS rather than MORE.
+"""
+
         prompt = f"""The following code comment is INCONSISTENT with the current code.
 
 [Original Comment]
@@ -113,7 +133,7 @@ class RectifierAgent(BaseAgent):
    - If original says "@return the value of X", keep "the value of" and only fix X.
 
 3. FORMAT: {format_warning if format_warning else "Maintain the exact same comment format as the original."}
-
+{summary_rules}
 Output: ONLY the corrected comment text, nothing else.
 """
         try:

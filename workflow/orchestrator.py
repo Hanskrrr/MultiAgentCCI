@@ -29,7 +29,11 @@ class WorkflowOrchestrator:
             use_treesitter=(parser_mode == "treesitter"),
             summary_retriever=self.summary_retriever,
         )
-        self.rectifier = RectifierAgent(model_name=model_name, retriever=self.retriever)
+        self.rectifier = RectifierAgent(
+            model_name=model_name,
+            retriever=self.retriever,
+            summary_retriever=self.summary_retriever,
+        )
         self.reviewer = ReviewerAgent(model_name=model_name)
 
         self.max_retries = max_retries
