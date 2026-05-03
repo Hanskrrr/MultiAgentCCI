@@ -23,6 +23,10 @@ class WorkflowOrchestrator:
             data_dir=self._summary_data_dir(),
             cache_dir=self._summary_cache_dir(),
         )
+        self.param_retriever = ExampleRetriever(
+            data_dir=self._param_data_dir(),
+            cache_dir=self._param_cache_dir(),
+        )
         self.detector = DetectorAgent(
             model_name=model_name,
             retriever=self.retriever,
@@ -33,6 +37,7 @@ class WorkflowOrchestrator:
             model_name=model_name,
             retriever=self.retriever,
             summary_retriever=self.summary_retriever,
+            param_retriever=self.param_retriever,
         )
         self.reviewer = ReviewerAgent(model_name=model_name)
 
@@ -49,6 +54,18 @@ class WorkflowOrchestrator:
         import os
         here = os.path.dirname(os.path.abspath(__file__))
         return os.path.join(here, "..", "retrieval", "cache", "summary")
+
+    @staticmethod
+    def _param_data_dir() -> str:
+        import os
+        here = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(here, "..", "dataset", "just_in_time", "Param")
+
+    @staticmethod
+    def _param_cache_dir() -> str:
+        import os
+        here = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(here, "..", "retrieval", "cache", "param")
 
     def run(self, code_snippet: str, original_comment: str, old_code_snippet: str = "") -> CodeCommentState:
         """

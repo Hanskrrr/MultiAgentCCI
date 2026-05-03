@@ -126,7 +126,7 @@ def _call_llm_for_explanation(item: dict, idx: int, model_name: str, category: s
     if parsed and parsed.get("full_signature"):
         sig_line = f"Code signature: {parsed['full_signature']}\n"
 
-    comment_kind = "method summary comment" if category == "Summary" else "@return comment"
+    comment_kind = {"Summary": "method summary comment", "Return": "@return comment", "Param": "@param comment"}.get(category, "@return comment")
     prompt = (
         f"Given this {comment_kind} and code pair labeled as {label}:\n"
         f"Comment: {item['comment']}\n"
@@ -180,7 +180,7 @@ def build_explanations(examples, model_name: str, batch_size: int = 50, category
 def main():
     parser = argparse.ArgumentParser(description="Build hybrid retrieval index")
     parser.add_argument("--category", type=str, default="Return",
-                        choices=["Return", "Summary"],
+                        choices=["Return", "Summary", "Param"],
                         help="Which category to build index for (default: Return)")
     parser.add_argument("--model", type=str, default="glm-4-flash",
                         help="LLM model name for explanation generation")

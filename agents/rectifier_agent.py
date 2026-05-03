@@ -10,10 +10,11 @@ class RectifierAgent(BaseAgent):
     支持 RAG 检索相似修正案例作为 few-shot 示范。
     """
 
-    def __init__(self, model_name: str = "glm-4-flash", retriever=None, summary_retriever=None):
+    def __init__(self, model_name: str = "glm-4-flash", retriever=None, summary_retriever=None, param_retriever=None):
         super().__init__(name="RectifierAgent", model_name=model_name)
         self.retriever = retriever
         self.summary_retriever = summary_retriever
+        self.param_retriever = param_retriever
 
     def _build_code_diff(self, state: CodeCommentState) -> str:
         old = getattr(state, "old_code_snippet", "") or ""
@@ -30,6 +31,8 @@ class RectifierAgent(BaseAgent):
         comment_type = getattr(state, "detected_comment_type", "")
         if comment_type == "summary" and self.summary_retriever is not None:
             retriever = self.summary_retriever
+        elif comment_type == "param" and self.param_retriever is not None:
+            retriever = self.param_retriever
         else:
             retriever = self.retriever
         if retriever is None:
