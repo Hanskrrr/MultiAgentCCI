@@ -32,6 +32,7 @@ class WorkflowOrchestrator:
             retriever=self.retriever,
             use_treesitter=(parser_mode == "treesitter"),
             summary_retriever=self.summary_retriever,
+            param_retriever=self.param_retriever,
         )
         self.rectifier = RectifierAgent(
             model_name=model_name,

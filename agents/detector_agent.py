@@ -13,10 +13,11 @@ class DetectorAgent(BaseAgent):
     判断代码与注释是否具有一致性。
     """
 
-    def __init__(self, model_name: str = "glm-4-flash", retriever=None, use_treesitter: bool = True, summary_retriever=None):
+    def __init__(self, model_name: str = "glm-4-flash", retriever=None, use_treesitter: bool = True, summary_retriever=None, param_retriever=None):
         super().__init__(name="DetectorAgent", model_name=model_name)
         self.retriever = retriever
         self.summary_retriever = summary_retriever
+        self.param_retriever = param_retriever
         self.use_treesitter = use_treesitter
 
     def _detect_comment_type(self, comment: str) -> str:
@@ -209,6 +210,29 @@ class DetectorAgent(BaseAgent):
         if "INCONSISTENT" in upper_response and "CONSISTENT" not in upper_response:
             return False, reasoning
         return True, reasoning
+
+    _STATIC_PARAM_EXAMPLES = """
+Benchmark Examples for Calibration:
+- Ex A (INCONSISTENT): Comment: "@param file to upload", Code: "upload(File requiredFile)" -> Name mismatch (file vs requiredFile).
+- Ex B (INCONSISTENT): Comment: "@param float x", Code: "distance(double x)" -> Type mismatch (float vs double).
+- Ex C (CONSISTENT): Code changed internal logic but parameter name and types match the description -> CONSISTENT.
+"""
+
+    def _get_param_examples(self, state: CodeCommentState) -> str:
+        if self.param_retriever is None:
+            return self._STATIC_PARAM_EXAMPLES
+        try:
+            examples = self.param_retriever.retrieve(
+                comment=state.original_comment,
+                code=state.code_snippet,
+                top_k=3,
+                ensure_mix=True,
+            )
+            if not examples:
+                return self._STATIC_PARAM_EXAMPLES
+            return self.param_retriever.format_examples(examples)
+        except Exception:
+            return self._STATIC_PARAM_EXAMPLES
 
     _STATIC_RETURN_EXAMPLES = """
 Benchmark Examples for Calibration:
@@ -416,6 +440,7 @@ structural code changes that very likely make the comment outdated. Treat them a
 """
 
         if comment_type == "param":
+            param_examples = self._get_param_examples(state)
             return (
                 common_head
                 + signal_block
@@ -432,10 +457,9 @@ Classification Guidelines (IMPORTANT):
 5. Tolerate Natural Language Paraphrasing ONLY for variable-to-description (e.g., `userId` described as "user ID" is fine).
 6. CONSISTENT if: All parameter identifiers match the code signature EXACTLY, types are correct, and the functional description remains accurate.
 
-Benchmark Examples for Calibration:
-- Ex A (INCONSISTENT): Comment: "@param file to upload", Code: "upload(File requiredFile)" -> Name mismatch (file vs requiredFile).
-- Ex B (INCONSISTENT): Comment: "@param float x", Code: "distance(double x)" -> Type mismatch (float vs double).
-- Ex C (CONSISTENT): Code changed internal logic but parameter name and types match the description -> CONSISTENT.
+"""
+                + param_examples
+                + """
 
 Output Requirement:
 Reasoning: <Direct comparison of identifiers and types mentioned in the comment vs the code signature>

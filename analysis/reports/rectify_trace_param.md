@@ -2,11 +2,11 @@
 
 ## 汇总指标
 
-- **xMatch (%)**: 49.02
-- **BLEU-4**: 0.6871
-- **GLEU**: 0.7467
-- **Meteor**: 0.8345
-- **SARI**: 0.8205
+- **xMatch (%)**: 47.06
+- **BLEU-4**: 0.6772
+- **GLEU**: 0.7374
+- **Meteor**: 0.8324
+- **SARI**: 0.8106
 - **Samples_Evaluated**: 102
 
 ## 汇总一览（按 SARI 升序，最差排前）
@@ -18,78 +18,78 @@
 | 3 | `Param_157` | ✓ |  | 0.054 | 0.368 | 0.418 | @param element an int specifying an element in the path, whe | @param index an int specifying an element in the path, where |
 | 4 | `Param_46` | ✓ |  | 0.217 | 0.386 | 0.526 | @param model Swagger Model object | @param model Swagger Schema object |
 | 5 | `Param_54` | ✓ |  | 0.087 | 0.427 | 0.624 | @param context the annotation binding context with access to | @param bindingContext the annotation binding context with ac |
-| 6 | `Param_16` | ✓ |  | 0.039 | 0.450 | 0.637 | @param urlPattern the URL pattern for requests that should b | @param name the name for the servlet that should be handled  |
-| 7 | `Param_133` | ✗(漏检) |  | 0.212 | 0.455 | 0.601 | @param node the tree corresponding to a use of an element | @param node the tree corresponding to a use of an element |
-| 8 | `Param_192` | ✓ |  | 0.424 | 0.488 | 0.647 | @param driver The driver to enhance | @param element The element to enhance |
-| 9 | `Param_105` | ✓ |  | 0.366 | 0.526 | 0.719 | @param invoker the component of the invoker | @param invokerWrapper the component of the invoker |
-| 10 | `Param_188` | ✓ |  | 0.290 | 0.532 | 0.771 | @param persister The persister for the entities being loaded | @param persister The persister for the collections being loa |
-| 11 | `Param_44` | ✓ |  | 0.278 | 0.565 | 0.410 | @param parent The PGraphics object (or any object, really) a | @param renderer The PGraphics object (or any object, really) |
-| 12 | `Param_8` | ✓ |  | 0.094 | 0.568 | 0.357 | @param fail Whether to fail | @param litmus Whether to fail |
-| 13 | `Param_121` | ✓ |  | 0.346 | 0.584 | 0.640 | @param dialect The dialect in effect. | @param jdbcEnvironment The dialect in effect. |
-| 14 | `Param_155` | ✓ |  | 0.053 | 0.588 | 0.432 | @param methods the methods to match against | @param implClass the class to find the method in |
-| 15 | `Param_66` | ✓ |  | 0.174 | 0.595 | 0.255 | @param str the input string | @param parts the input string array |
-| 16 | `Param_95` | ✓ |  | 0.276 | 0.610 | 0.637 | @param clazz the annotation class to check for | @param fqcn the annotation class to check for |
-| 17 | `Param_177` | ✓ |  | 0.276 | 0.610 | 0.637 | @param clazz the annotation class to check for | @param fqcn the annotation class to check for |
-| 18 | `Param_181` | ✗(漏检) |  | 0.735 | 0.616 | 0.914 | @param allDefinitions a map of all Swagger models from the s | @param allDefinitions a map of all Swagger models from the s |
-| 19 | `Param_175` | ✗(漏检) |  | 0.761 | 0.621 | 0.921 | @param t Target for finding dependents of t related by this  | @param t Target for finding dependents of t related by this  |
-| 20 | `Param_125` | ✓ |  | 0.610 | 0.635 | 0.769 | @param schemes a map of Swagger SecuritySchemeDefinition obj | @param securitySchemeMap a map of Swagger SecurityScheme obj |
-| 21 | `Param_36` | ✓ |  | 0.489 | 0.641 | 0.841 | @param methodName The method name. | @param attributeName The method name. |
-| 22 | `Param_163` | ✓ |  | 0.489 | 0.641 | 0.999 | @param flag the flag to check | @param flagsToCheck the flag to check |
-| 23 | `Param_30` | ✗(漏检) |  | 0.916 | 0.652 | 0.969 | @param type the identifier for the required type handler. Th | @param type the identifier for the required type handler. Th |
-| 24 | `Param_62` | ✗(漏检) |  | 0.926 | 0.653 | 0.972 | @param environment the current environment, which may affect | @param environment the current environment, which may affect |
-| 25 | `Param_99` | ✓ |  | 0.202 | 0.665 | 0.619 | @param p Swagger property object | @param schema Swagger property object |
-| 26 | `Param_151` | ✓ |  | 0.202 | 0.665 | 0.619 | @param p Swagger property object | @param schema Swagger property object |
-| 27 | `Param_10` | ✓ |  | 0.839 | 0.667 | 0.944 | @param defaultGraph the default ImmutableGraph against which | @param defaultGraph the default TripleCollection against whi |
-| 28 | `Param_50` | ✓ |  | 0.106 | 0.667 | 0.341 | @param value | @param value |
-| 29 | `Param_52` | ✓ |  | 0.669 | 0.667 | 0.794 | @param req the  HttpServletResponse | @param req the AtmosphereRequest |
-| 30 | `Param_127` | ✓ |  | 0.489 | 0.667 | 0.841 | @param appendStr The String to append | @param addStr The String to append |
-| 31 | `Param_183` | ✓ |  | 0.005 | 0.679 | 0.185 | @param props | @param properties |
-| 32 | `Param_119` | ✓ |  | 0.067 | 0.683 | 0.167 | @param  The type of the element we are getting. | @param selector The function to extract words from a sentenc |
-| 33 | `Param_48` | ✓ |  | 0.809 | 0.690 | 0.999 | @param metaFilePath metadata cache file path | @param metaFilePaths metadata cache file paths |
-| 34 | `Param_165` | ✓ |  | 0.610 | 0.696 | 0.892 | @param instant instant from 1970-01-01T00:00:00 local time | @param localInstant instant from 1970-01-01T00:00:00 local t |
-| 35 | `Param_18` | ✓ |  | 0.083 | 0.697 | 0.605 | @param urlPattern the URL pattern for requests that should b | @param name the name for the filter |
-| 36 | `Param_113` | ✓ |  | 0.007 | 0.701 | 0.200 | @param clazz | @param entityName |
-| 37 | `Param_40` | ✓ |  | 0.615 | 0.707 | 0.816 | @param name the filter's name | @param filter the filter's name |
-| 38 | `Param_161` | ✓ |  | 0.100 | 0.722 | 0.446 | @param delimiter the delimiter between parts | @param parts the array of parts to parse |
-| 39 | `Param_167` | ✓ |  | 0.208 | 0.794 | 0.414 | @param requestRegions The input 3A regions | @param requestRegion The input 3A region |
-| 40 | `Param_24` | ✓ |  | 0.289 | 0.806 | 0.532 | @param prefered | @param preferred |
-| 41 | `Param_34` | ✓ |  | 0.643 | 0.811 | 0.965 | @param name the filter's name | @param klass the filter's class |
-| 42 | `Param_123` | ✓ |  | 0.741 | 0.812 | 0.933 | @param columnNames the comma-separated list of column names  | @param fullyQualifiedColumnNames the comma-separated list of |
-| 43 | `Param_58` | ✓ |  | 0.548 | 0.819 | 0.535 | @param arg0 the object | @param reference the object |
-| 44 | `Param_190` | ✓ |  | 0.534 | 0.848 | 0.908 | @param values the values for the new row | @param inputValues the values for the new row |
-| 45 | `Param_56` | ✓ |  | 0.403 | 0.861 | 0.655 | @param operation | @param operator |
-| 46 | `Param_139` | ✓ |  | 0.398 | 0.861 | 0.824 | @param operator operator | @param operation operation |
-| 47 | `Param_0` | ✓ | ✓ | 1.000 | 0.917 | 0.999 | @param file file to upload (required) | @param requiredFile file to upload (required) |
-| 48 | `Param_20` | ✓ | ✓ | 1.000 | 0.917 | 0.999 | @param file file to upload (required) | @param requiredFile file to upload (required) |
-| 49 | `Param_64` | ✓ | ✓ | 1.000 | 0.917 | 1.000 | @param body Input composite as post body (optional) | @param outerComposite Input composite as post body (optional |
-| 50 | `Param_77` | ✓ | ✓ | 1.000 | 0.917 | 0.998 | @param file file to upload | @param requiredFile file to upload |
-| 51 | `Param_85` | ✓ | ✓ | 1.000 | 0.917 | 0.999 | @param file file to upload (required) | @param requiredFile file to upload (required) |
-| 52 | `Param_87` | ✓ | ✓ | 1.000 | 0.917 | 0.999 | @param file file to upload (required) | @param requiredFile file to upload (required) |
-| 53 | `Param_107` | ✓ | ✓ | 1.000 | 0.917 | 0.996 | @param client client model | @param body client model |
-| 54 | `Param_115` | ✓ | ✓ | 1.000 | 0.917 | 0.996 | @param tokens the tokens | @param siteTokens the tokens |
-| 55 | `Param_141` | ✓ | ✓ | 1.000 | 0.917 | 0.992 | @param signatureType SignatureType | @param signatureType OAuth1SignatureType |
-| 56 | `Param_173` | ✓ | ✓ | 1.000 | 0.917 | 1.000 | @param millis the time instant in millis to query. | @param instant the time instant in millis to query. |
-| 57 | `Param_186` | ✓ | ✓ | 1.000 | 0.917 | 1.000 | @param body Input boolean as post body (optional) | @param booleanPostBody Input boolean as post body (optional) |
-| 58 | `Param_202` | ✓ | ✓ | 1.000 | 0.917 | 1.000 | @param millis the time instant in millis to update. | @param instant the time instant in millis to update. |
-| 59 | `Param_204` | ✓ | ✓ | 1.000 | 0.917 | 0.999 | @param file file to upload (required) | @param requiredFile file to upload (required) |
-| 60 | `Param_14` | ✓ | ✓ | 1.000 | 0.983 | 1.000 | @param tokenClass the class of the authenticationToken being | @param token the token being submitted for authentication. |
-| 61 | `Param_131` | ✓ | ✓ | 1.000 | 0.983 | 1.000 | @param connectionManager The connection manager to wrap with | @param logicalConnection The logical connection to wrap with |
-| 62 | `Param_171` | ✓ |  | 0.943 | 0.990 | 0.992 | @param regex the text to search for. The parameter will be i | @param text the text to search for. The parameter will be in |
-| 63 | `Param_2` | ✓ | ✓ | 1.000 | 1.000 | 0.999 | @param float x The point x coordinate. | @param double x The point x coordinate. |
-| 64 | `Param_4` | ✓ | ✓ | 1.000 | 1.000 | 0.999 | @param tileY the y-axis coordinate of the tile | @param localY the y-axis coordinate of the tile |
-| 65 | `Param_6` | ✓ | ✓ | 0.562 | 1.000 | 0.981 | @param iteratorFactory | @param indexSupport |
-| 66 | `Param_12` | ✓ |  | 1.000 | 1.000 | 0.996 | @param request the  HttpServletRequest | @param request the AtmosphereRequest |
-| 67 | `Param_22` | ✓ |  | 1.000 | 1.000 | 0.996 | @param res the  HttpServletResponse | @param response the HttpServletResponse |
-| 68 | `Param_26` | ✓ | ✓ | 0.562 | 1.000 | 0.981 | @param pluginKey | @param pluginName |
-| 69 | `Param_28` | ✓ | ✓ | 0.562 | 1.000 | 0.981 | @param entryId | @param key |
-| 70 | `Param_32` | ✓ | ✓ | 1.000 | 1.000 | 1.000 | @param body order placed for purchasing the pet (required) | @param order order placed for purchasing the pet (required) |
-| 71 | `Param_38` | ✓ | ✓ | 1.000 | 1.000 | 0.998 | @param id the module. | @param ref the module. |
-| 72 | `Param_42` | ✓ | ✓ | 0.562 | 1.000 | 0.981 | @param global | @param scenarioPattern |
-| 73 | `Param_60` | ✓ | ✓ | 1.000 | 1.000 | 0.999 | @param x double The x component. | @param x float The x component. |
-| 74 | `Param_68` | ✓ | ✓ | 1.000 | 1.000 | 0.996 | @param body client model | @param client client model |
-| 75 | `Param_70` | ✓ | ✓ | 1.000 | 1.000 | 0.999 | @param attributes an object containing an AttributeMap | @param withAttributes an object containing an AttributeMap |
-| 76 | `Param_72` | ✓ | ✓ | 1.000 | 1.000 | 1.000 | @param outerComposite Input composite as post body (optional | @param body Input composite as post body (optional) |
-| 77 | `Param_74` | ✓ | ✓ | 1.000 | 1.000 | 0.999 | @param contextWrappableAs the contextWrappableAs to filter p | @param type the type to filter providers by |
+| 6 | `Param_119` | ✓ |  | 0.067 | 0.438 | 0.188 | @param  The type of the element we are getting. | @param selector The type of the element we are getting. |
+| 7 | `Param_16` | ✓ |  | 0.039 | 0.450 | 0.637 | @param urlPattern the URL pattern for requests that should b | @param name the name for the servlet that should be handled  |
+| 8 | `Param_133` | ✗(漏检) |  | 0.212 | 0.455 | 0.601 | @param node the tree corresponding to a use of an element | @param node the tree corresponding to a use of an element |
+| 9 | `Param_192` | ✓ |  | 0.424 | 0.488 | 0.647 | @param driver The driver to enhance | @param element The element to enhance |
+| 10 | `Param_105` | ✓ |  | 0.366 | 0.526 | 0.719 | @param invoker the component of the invoker | @param invokerWrapper the component of the invoker |
+| 11 | `Param_188` | ✓ |  | 0.290 | 0.532 | 0.771 | @param persister The persister for the entities being loaded | @param persister The persister for the collections being loa |
+| 12 | `Param_44` | ✓ |  | 0.278 | 0.565 | 0.410 | @param parent The PGraphics object (or any object, really) a | @param renderer The PGraphics object (or any object, really) |
+| 13 | `Param_8` | ✓ |  | 0.094 | 0.568 | 0.357 | @param fail Whether to fail | @param litmus Whether to fail |
+| 14 | `Param_121` | ✓ |  | 0.346 | 0.584 | 0.640 | @param dialect The dialect in effect. | @param jdbcEnvironment The dialect in effect. |
+| 15 | `Param_155` | ✓ |  | 0.053 | 0.588 | 0.432 | @param methods the methods to match against | @param implClass the class to find the method in |
+| 16 | `Param_66` | ✓ |  | 0.174 | 0.595 | 0.255 | @param str the input string | @param parts the input string array |
+| 17 | `Param_95` | ✓ |  | 0.276 | 0.610 | 0.637 | @param clazz the annotation class to check for | @param fqcn the annotation class to check for |
+| 18 | `Param_177` | ✓ |  | 0.276 | 0.610 | 0.637 | @param clazz the annotation class to check for | @param fqcn the annotation class to check for |
+| 19 | `Param_181` | ✗(漏检) |  | 0.735 | 0.616 | 0.914 | @param allDefinitions a map of all Swagger models from the s | @param allDefinitions a map of all Swagger models from the s |
+| 20 | `Param_175` | ✗(漏检) |  | 0.761 | 0.621 | 0.921 | @param t Target for finding dependents of t related by this  | @param t Target for finding dependents of t related by this  |
+| 21 | `Param_167` | ✓ |  | 0.168 | 0.628 | 0.414 | @param requestRegions The input 3A regions | @param requestRegion The input 3A regions |
+| 22 | `Param_125` | ✓ |  | 0.610 | 0.635 | 0.769 | @param schemes a map of Swagger SecuritySchemeDefinition obj | @param securitySchemeMap a map of Swagger SecurityScheme obj |
+| 23 | `Param_36` | ✓ |  | 0.489 | 0.641 | 0.841 | @param methodName The method name. | @param attributeName The method name. |
+| 24 | `Param_163` | ✓ |  | 0.489 | 0.641 | 0.999 | @param flag the flag to check | @param flagsToCheck the flag to check |
+| 25 | `Param_30` | ✗(漏检) |  | 0.916 | 0.652 | 0.969 | @param type the identifier for the required type handler. Th | @param type the identifier for the required type handler. Th |
+| 26 | `Param_62` | ✗(漏检) |  | 0.926 | 0.653 | 0.972 | @param environment the current environment, which may affect | @param environment the current environment, which may affect |
+| 27 | `Param_99` | ✓ |  | 0.202 | 0.665 | 0.619 | @param p Swagger property object | @param schema Swagger property object |
+| 28 | `Param_151` | ✓ |  | 0.202 | 0.665 | 0.619 | @param p Swagger property object | @param schema Swagger property object |
+| 29 | `Param_10` | ✓ |  | 0.839 | 0.667 | 0.944 | @param defaultGraph the default ImmutableGraph against which | @param defaultGraph the default TripleCollection against whi |
+| 30 | `Param_50` | ✗(漏检) |  | 0.106 | 0.667 | 0.341 | @param value | @param value |
+| 31 | `Param_52` | ✓ |  | 0.669 | 0.667 | 0.794 | @param req the  HttpServletResponse | @param req the AtmosphereRequest |
+| 32 | `Param_74` | ✓ |  | 0.369 | 0.667 | 0.747 | @param contextWrappableAs the contextWrappableAs to filter p | @param iso3166Code the iso3166Code to filter providers by |
+| 33 | `Param_127` | ✓ |  | 0.489 | 0.667 | 0.841 | @param appendStr The String to append | @param addStr The String to append |
+| 34 | `Param_18` | ✓ |  | 0.056 | 0.672 | 0.577 | @param urlPattern the URL pattern for requests that should b | @param name the name for the filter to be added |
+| 35 | `Param_183` | ✓ |  | 0.005 | 0.679 | 0.185 | @param props | @param properties |
+| 36 | `Param_48` | ✓ |  | 0.809 | 0.690 | 0.999 | @param metaFilePath metadata cache file path | @param metaFilePaths metadata cache file paths |
+| 37 | `Param_165` | ✓ |  | 0.610 | 0.696 | 0.892 | @param instant instant from 1970-01-01T00:00:00 local time | @param localInstant instant from 1970-01-01T00:00:00 local t |
+| 38 | `Param_113` | ✓ |  | 0.007 | 0.701 | 0.200 | @param clazz | @param entityName |
+| 39 | `Param_40` | ✓ |  | 0.615 | 0.707 | 0.816 | @param name the filter's name | @param filter the filter's name |
+| 40 | `Param_161` | ✓ |  | 0.100 | 0.722 | 0.446 | @param delimiter the delimiter between parts | @param parts the array of parts to parse |
+| 41 | `Param_131` | ✓ |  | 0.685 | 0.766 | 0.916 | @param connectionManager The connection manager to wrap with | @param logicalConnection The connection manager to wrap with |
+| 42 | `Param_24` | ✓ |  | 0.289 | 0.806 | 0.532 | @param prefered | @param preferred |
+| 43 | `Param_34` | ✓ |  | 0.643 | 0.811 | 0.965 | @param name the filter's name | @param klass the filter's class |
+| 44 | `Param_123` | ✓ |  | 0.741 | 0.812 | 0.933 | @param columnNames the comma-separated list of column names  | @param fullyQualifiedColumnNames the comma-separated list of |
+| 45 | `Param_58` | ✓ |  | 0.548 | 0.819 | 0.535 | @param arg0 the object | @param reference the object |
+| 46 | `Param_139` | ✓ |  | 0.398 | 0.844 | 0.950 | @param operator operator | @param operation operator |
+| 47 | `Param_190` | ✓ |  | 0.534 | 0.848 | 0.908 | @param values the values for the new row | @param inputValues the values for the new row |
+| 48 | `Param_56` | ✓ |  | 0.403 | 0.861 | 0.655 | @param operation | @param operator |
+| 49 | `Param_0` | ✓ | ✓ | 1.000 | 0.917 | 0.999 | @param file file to upload (required) | @param requiredFile file to upload (required) |
+| 50 | `Param_20` | ✓ | ✓ | 1.000 | 0.917 | 0.999 | @param file file to upload (required) | @param requiredFile file to upload (required) |
+| 51 | `Param_64` | ✓ | ✓ | 1.000 | 0.917 | 1.000 | @param body Input composite as post body (optional) | @param outerComposite Input composite as post body (optional |
+| 52 | `Param_77` | ✓ | ✓ | 1.000 | 0.917 | 0.998 | @param file file to upload | @param requiredFile file to upload |
+| 53 | `Param_85` | ✓ | ✓ | 1.000 | 0.917 | 0.999 | @param file file to upload (required) | @param requiredFile file to upload (required) |
+| 54 | `Param_87` | ✓ | ✓ | 1.000 | 0.917 | 0.999 | @param file file to upload (required) | @param requiredFile file to upload (required) |
+| 55 | `Param_107` | ✓ | ✓ | 1.000 | 0.917 | 0.996 | @param client client model | @param body client model |
+| 56 | `Param_115` | ✓ | ✓ | 1.000 | 0.917 | 0.996 | @param tokens the tokens | @param siteTokens the tokens |
+| 57 | `Param_141` | ✓ | ✓ | 1.000 | 0.917 | 0.992 | @param signatureType SignatureType | @param signatureType OAuth1SignatureType |
+| 58 | `Param_173` | ✓ | ✓ | 1.000 | 0.917 | 1.000 | @param millis the time instant in millis to query. | @param instant the time instant in millis to query. |
+| 59 | `Param_186` | ✓ | ✓ | 1.000 | 0.917 | 1.000 | @param body Input boolean as post body (optional) | @param booleanPostBody Input boolean as post body (optional) |
+| 60 | `Param_202` | ✓ | ✓ | 1.000 | 0.917 | 1.000 | @param millis the time instant in millis to update. | @param instant the time instant in millis to update. |
+| 61 | `Param_204` | ✓ | ✓ | 1.000 | 0.917 | 0.999 | @param file file to upload (required) | @param requiredFile file to upload (required) |
+| 62 | `Param_14` | ✓ | ✓ | 1.000 | 0.983 | 1.000 | @param tokenClass the class of the authenticationToken being | @param token the token being submitted for authentication. |
+| 63 | `Param_171` | ✓ |  | 0.943 | 0.990 | 0.992 | @param regex the text to search for. The parameter will be i | @param text the text to search for. The parameter will be in |
+| 64 | `Param_2` | ✓ | ✓ | 1.000 | 1.000 | 0.999 | @param float x The point x coordinate. | @param double x The point x coordinate. |
+| 65 | `Param_4` | ✓ | ✓ | 1.000 | 1.000 | 0.999 | @param tileY the y-axis coordinate of the tile | @param localY the y-axis coordinate of the tile |
+| 66 | `Param_6` | ✓ | ✓ | 0.562 | 1.000 | 0.981 | @param iteratorFactory | @param indexSupport |
+| 67 | `Param_12` | ✓ |  | 1.000 | 1.000 | 0.996 | @param request the  HttpServletRequest | @param request the AtmosphereRequest |
+| 68 | `Param_22` | ✓ |  | 1.000 | 1.000 | 0.996 | @param res the  HttpServletResponse | @param response the HttpServletResponse |
+| 69 | `Param_26` | ✓ | ✓ | 0.562 | 1.000 | 0.981 | @param pluginKey | @param pluginName |
+| 70 | `Param_28` | ✓ | ✓ | 0.562 | 1.000 | 0.981 | @param entryId | @param key |
+| 71 | `Param_32` | ✓ | ✓ | 1.000 | 1.000 | 1.000 | @param body order placed for purchasing the pet (required) | @param order order placed for purchasing the pet (required) |
+| 72 | `Param_38` | ✓ | ✓ | 1.000 | 1.000 | 0.998 | @param id the module. | @param ref the module. |
+| 73 | `Param_42` | ✓ | ✓ | 0.562 | 1.000 | 0.981 | @param global | @param scenarioPattern |
+| 74 | `Param_60` | ✓ | ✓ | 1.000 | 1.000 | 0.999 | @param x double The x component. | @param x float The x component. |
+| 75 | `Param_68` | ✓ | ✓ | 1.000 | 1.000 | 0.996 | @param body client model | @param client client model |
+| 76 | `Param_70` | ✓ | ✓ | 1.000 | 1.000 | 0.999 | @param attributes an object containing an AttributeMap | @param withAttributes an object containing an AttributeMap |
+| 77 | `Param_72` | ✓ | ✓ | 1.000 | 1.000 | 1.000 | @param outerComposite Input composite as post body (optional | @param body Input composite as post body (optional) |
 | 78 | `Param_79` | ✓ | ✓ | 1.000 | 1.000 | 0.999 | @param y float The y component. | @param y double The y component. |
 | 79 | `Param_81` | ✓ | ✓ | 1.000 | 1.000 | 0.999 | @param body client model (required) | @param client client model (required) |
 | 80 | `Param_83` | ✓ | ✓ | 1.000 | 1.000 | 0.996 | @param call Extract expression | @param rexNode Extract expression |
@@ -350,6 +350,69 @@
 					}
 					break;
 				}
+// ... (truncated)
+```
+
+---
+
+### [60/102] `Param_119`
+
+| 指标 | 值 |
+|---|---|
+| 检测状态 | ✓ 已检测 |
+| BLEU-4 | 0.0672 |
+| SARI | 0.4378 |
+| GLEU | 0.1176 |
+| METEOR | 0.1881 |
+| xMatch | ✗ |
+
+**原注释 (source)**
+```
+@param  The type of the element we are getting.
+```
+
+**标准注释 (ground truth)**
+```
+@param selector The selector for the strings between the path, if any. If left empty, these will be omitted from the list.
+```
+
+**生成注释 (generated)**
+```
+@param selector The type of the element we are getting.
+```
+
+**代码片段**
+```java
+  public List<String> dependencyPathBetween(int start, int end, Optional<Function<Sentence, List<String>>> selector) {
+    // Get paths from a node to the root of the sentence
+    LinkedList<Integer> rootToStart = new LinkedList<>();
+    LinkedList<Integer> rootToEnd = new LinkedList<>();
+    int startAncestor = start;
+    List<Optional<Integer>> governors = sentence.governors();
+    Set<Integer> seenVertices = new HashSet<>();
+    while (startAncestor >= 0 && governors.get(startAncestor).isPresent()) {
+      if (seenVertices.contains(startAncestor)) {
+        // Found loopiness -- revert to BFS
+        return loopyDependencyPathBetween(start, end, selector);
+      }
+      seenVertices.add(startAncestor);
+      rootToStart.addFirst(startAncestor);
+      startAncestor = governors.get(startAncestor).get();
+    }
+    if (startAncestor == -1) {
+      rootToStart.addFirst(-1);
+    }
+    int endAncestor = end;
+    seenVertices.clear();
+    while (endAncestor >= 0 && governors.get(endAncestor).isPresent()) {
+      if (seenVertices.contains(endAncestor)) {
+        // Found loopiness -- revert to BFS
+        return loopyDependencyPathBetween(start, end, selector);
+      }
+      seenVertices.add(endAncestor);
+      rootToEnd.addFirst(endAncestor);
+      endAncestor = governors.get(endAncestor).get();
+    }
 // ... (truncated)
 ```
 
@@ -962,6 +1025,53 @@
 
 ---
 
+### [83/102] `Param_167`
+
+| 指标 | 值 |
+|---|---|
+| 检测状态 | ✓ 已检测 |
+| BLEU-4 | 0.1681 |
+| SARI | 0.6276 |
+| GLEU | 0.2727 |
+| METEOR | 0.4136 |
+| xMatch | ✗ |
+
+**原注释 (source)**
+```
+@param requestRegions The input 3A regions
+```
+
+**标准注释 (ground truth)**
+```
+@param requestRegion The input 3A region [xmin, ymin, xmax, ymax, weight]
+```
+
+**生成注释 (generated)**
+```
+@param requestRegion The input 3A regions
+```
+
+**代码片段**
+```java
+    public static int[] getExpectedOutputRegion(int[] requestRegion, Rect cropRect){
+        Rect requestRect = new Rect(requestRegion[0], requestRegion[1],
+                requestRegion[2], requestRegion[3]);
+        Rect resultRect = new Rect();
+        assertTrue("Input 3A region must intersect cropped region",
+                    resultRect.setIntersect(requestRect, cropRect));
+        return new int[] {
+                resultRect.left,
+                resultRect.top,
+                resultRect.right,
+                resultRect.bottom,
+                requestRegion[4]};
+    }
+
+
+```
+
+---
+
 ### [63/102] `Param_125`
 
 | 指标 | 值 |
@@ -1321,7 +1431,7 @@
 
 | 指标 | 值 |
 |---|---|
-| 检测状态 | ✓ 已检测 |
+| 检测状态 | ✗ 漏检(使用原注释) |
 | BLEU-4 | 0.1062 |
 | SARI | 0.6667 |
 | GLEU | 0.2308 |
@@ -1409,6 +1519,44 @@
 
 ---
 
+### [38/102] `Param_74`
+
+| 指标 | 值 |
+|---|---|
+| 检测状态 | ✓ 已检测 |
+| BLEU-4 | 0.3689 |
+| SARI | 0.6667 |
+| GLEU | 0.4667 |
+| METEOR | 0.7472 |
+| xMatch | ✗ |
+
+**原注释 (source)**
+```
+@param contextWrappableAs the contextWrappableAs to filter providers by
+```
+
+**标准注释 (ground truth)**
+```
+@param type the type to filter providers by
+```
+
+**生成注释 (generated)**
+```
+@param iso3166Code the iso3166Code to filter providers by
+```
+
+**代码片段**
+```java
+   public static Iterable<ProviderMetadata<?, ?, ?, ?>> boundedByIso3166Code(String iso3166Code, ApiType type) {
+      return filter(all(),
+            Predicates.and(ProviderPredicates.boundedByIso3166Code(iso3166Code), ProviderPredicates.type(type)));
+   }
+
+
+```
+
+---
+
 ### [64/102] `Param_127`
 
 | 指标 | 值 |
@@ -1453,6 +1601,46 @@
 
 ---
 
+### [10/102] `Param_18`
+
+| 指标 | 值 |
+|---|---|
+| 检测状态 | ✓ 已检测 |
+| BLEU-4 | 0.0564 |
+| SARI | 0.6719 |
+| GLEU | 0.1579 |
+| METEOR | 0.5769 |
+| xMatch | ✗ |
+
+**原注释 (source)**
+```
+@param urlPattern the URL pattern for requests that should be handled by instances of  klass
+```
+
+**标准注释 (ground truth)**
+```
+@param klass the filter class
+```
+
+**生成注释 (generated)**
+```
+@param name the name for the filter to be added
+```
+
+**代码片段**
+```java
+    public FilterRegistration.Dynamic addFilter(String name, Class<? extends Filter> klass) {
+        final FilterHolder holder = new FilterHolder(checkNotNull(klass));
+        holder.setName(name);
+        handler.getServletHandler().addFilter(holder);
+        return holder.getRegistration();
+    }
+
+
+```
+
+---
+
 ### [91/102] `Param_183`
 
 | 指标 | 值 |
@@ -1486,69 +1674,6 @@
     }
 
 
-```
-
----
-
-### [60/102] `Param_119`
-
-| 指标 | 值 |
-|---|---|
-| 检测状态 | ✓ 已检测 |
-| BLEU-4 | 0.0672 |
-| SARI | 0.6835 |
-| GLEU | 0.1176 |
-| METEOR | 0.1672 |
-| xMatch | ✗ |
-
-**原注释 (source)**
-```
-@param  The type of the element we are getting.
-```
-
-**标准注释 (ground truth)**
-```
-@param selector The selector for the strings between the path, if any. If left empty, these will be omitted from the list.
-```
-
-**生成注释 (generated)**
-```
-@param selector The function to extract words from a sentence.
-```
-
-**代码片段**
-```java
-  public List<String> dependencyPathBetween(int start, int end, Optional<Function<Sentence, List<String>>> selector) {
-    // Get paths from a node to the root of the sentence
-    LinkedList<Integer> rootToStart = new LinkedList<>();
-    LinkedList<Integer> rootToEnd = new LinkedList<>();
-    int startAncestor = start;
-    List<Optional<Integer>> governors = sentence.governors();
-    Set<Integer> seenVertices = new HashSet<>();
-    while (startAncestor >= 0 && governors.get(startAncestor).isPresent()) {
-      if (seenVertices.contains(startAncestor)) {
-        // Found loopiness -- revert to BFS
-        return loopyDependencyPathBetween(start, end, selector);
-      }
-      seenVertices.add(startAncestor);
-      rootToStart.addFirst(startAncestor);
-      startAncestor = governors.get(startAncestor).get();
-    }
-    if (startAncestor == -1) {
-      rootToStart.addFirst(-1);
-    }
-    int endAncestor = end;
-    seenVertices.clear();
-    while (endAncestor >= 0 && governors.get(endAncestor).isPresent()) {
-      if (seenVertices.contains(endAncestor)) {
-        // Found loopiness -- revert to BFS
-        return loopyDependencyPathBetween(start, end, selector);
-      }
-      seenVertices.add(endAncestor);
-      rootToEnd.addFirst(endAncestor);
-      endAncestor = governors.get(endAncestor).get();
-    }
-// ... (truncated)
 ```
 
 ---
@@ -1653,46 +1778,6 @@
         }
         return localInstant;
     }
-
-```
-
----
-
-### [10/102] `Param_18`
-
-| 指标 | 值 |
-|---|---|
-| 检测状态 | ✓ 已检测 |
-| BLEU-4 | 0.0831 |
-| SARI | 0.6972 |
-| GLEU | 0.2308 |
-| METEOR | 0.6048 |
-| xMatch | ✗ |
-
-**原注释 (source)**
-```
-@param urlPattern the URL pattern for requests that should be handled by instances of  klass
-```
-
-**标准注释 (ground truth)**
-```
-@param klass the filter class
-```
-
-**生成注释 (generated)**
-```
-@param name the name for the filter
-```
-
-**代码片段**
-```java
-    public FilterRegistration.Dynamic addFilter(String name, Class<? extends Filter> klass) {
-        final FilterHolder holder = new FilterHolder(checkNotNull(klass));
-        holder.setName(name);
-        handler.getServletHandler().addFilter(holder);
-        return holder.getRegistration();
-    }
-
 
 ```
 
@@ -1818,48 +1903,42 @@
 
 ---
 
-### [83/102] `Param_167`
+### [66/102] `Param_131`
 
 | 指标 | 值 |
 |---|---|
 | 检测状态 | ✓ 已检测 |
-| BLEU-4 | 0.2077 |
-| SARI | 0.7940 |
-| GLEU | 0.3333 |
-| METEOR | 0.4136 |
+| BLEU-4 | 0.6851 |
+| SARI | 0.7656 |
+| GLEU | 0.7174 |
+| METEOR | 0.9159 |
 | xMatch | ✗ |
 
 **原注释 (source)**
 ```
-@param requestRegions The input 3A regions
+@param connectionManager The connection manager to wrap with the connection proxy.
 ```
 
 **标准注释 (ground truth)**
 ```
-@param requestRegion The input 3A region [xmin, ymin, xmax, ymax, weight]
+@param logicalConnection The logical connection to wrap with the connection proxy.
 ```
 
 **生成注释 (generated)**
 ```
-@param requestRegion The input 3A region
+@param logicalConnection The connection manager to wrap with the connection proxy.
 ```
 
 **代码片段**
 ```java
-    public static int[] getExpectedOutputRegion(int[] requestRegion, Rect cropRect){
-        Rect requestRect = new Rect(requestRegion[0], requestRegion[1],
-                requestRegion[2], requestRegion[3]);
-        Rect resultRect = new Rect();
-        assertTrue("Input 3A region must intersect cropped region",
-                    resultRect.setIntersect(requestRect, cropRect));
-        return new int[] {
-                resultRect.left,
-                resultRect.top,
-                resultRect.right,
-                resultRect.bottom,
-                requestRegion[4]};
-    }
-
+	public static Connection generateProxy(LogicalConnectionImpl logicalConnection) {
+		BorrowedConnectionProxy handler = new BorrowedConnectionProxy( logicalConnection );
+		return ( Connection ) Proxy.newProxyInstance(
+				getProxyClassLoader(),
+		        PROXY_INTERFACES,
+		        handler
+		);
+	}
 
 ```
 
@@ -2046,6 +2125,42 @@
 
 ---
 
+### [70/102] `Param_139`
+
+| 指标 | 值 |
+|---|---|
+| 检测状态 | ✓ 已检测 |
+| BLEU-4 | 0.3976 |
+| SARI | 0.8444 |
+| GLEU | 0.6000 |
+| METEOR | 0.9498 |
+| xMatch | ✗ |
+
+**原注释 (source)**
+```
+@param operator operator
+```
+
+**标准注释 (ground truth)**
+```
+@param operation
+```
+
+**生成注释 (generated)**
+```
+@param operation operator
+```
+
+**代码片段**
+```java
+    public static BooleanOperation predicate(Operator operation, Expression<?>... args) {
+        return new BooleanOperation(operation, args);
+    }
+
+```
+
+---
+
 ### [94/102] `Param_190`
 
 | 指标 | 值 |
@@ -2139,42 +2254,6 @@
 ```java
     public static BooleanOperation booleanOperation(Operator operator, Expression<?>... args) {
         return predicate(operator, args);
-    }
-
-```
-
----
-
-### [70/102] `Param_139`
-
-| 指标 | 值 |
-|---|---|
-| 检测状态 | ✓ 已检测 |
-| BLEU-4 | 0.3976 |
-| SARI | 0.8611 |
-| GLEU | 0.6000 |
-| METEOR | 0.8244 |
-| xMatch | ✗ |
-
-**原注释 (source)**
-```
-@param operator operator
-```
-
-**标准注释 (ground truth)**
-```
-@param operation
-```
-
-**生成注释 (generated)**
-```
-@param operation operation
-```
-
-**代码片段**
-```java
-    public static BooleanOperation predicate(Operator operation, Expression<?>... args) {
-        return new BooleanOperation(operation, args);
     }
 
 ```
@@ -2868,47 +2947,6 @@ if (requiredFile != null)
 
 ---
 
-### [66/102] `Param_131`
-
-| 指标 | 值 |
-|---|---|
-| 检测状态 | ✓ 已检测 |
-| BLEU-4 | 1.0000 |
-| SARI | 0.9833 |
-| GLEU | 1.0000 |
-| METEOR | 0.9998 |
-| xMatch | ✓ |
-
-**原注释 (source)**
-```
-@param connectionManager The connection manager to wrap with the connection proxy.
-```
-
-**标准注释 (ground truth)**
-```
-@param logicalConnection The logical connection to wrap with the connection proxy.
-```
-
-**生成注释 (generated)**
-```
-@param logicalConnection The logical connection to wrap with the connection proxy.
-```
-
-**代码片段**
-```java
-	public static Connection generateProxy(LogicalConnectionImpl logicalConnection) {
-		BorrowedConnectionProxy handler = new BorrowedConnectionProxy( logicalConnection );
-		return ( Connection ) Proxy.newProxyInstance(
-				getProxyClassLoader(),
-		        PROXY_INTERFACES,
-		        handler
-		);
-	}
-
-```
-
----
-
 ### [85/102] `Param_171`
 
 | 指标 | 值 |
@@ -3578,44 +3616,6 @@ if (requiredFile != null)
     GenericType<OuterComposite> localVarReturnType = new GenericType<OuterComposite>() {};
     return apiClient.invokeAPI(localVarPath, "POST", localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localVarReturnType);
       }
-
-```
-
----
-
-### [38/102] `Param_74`
-
-| 指标 | 值 |
-|---|---|
-| 检测状态 | ✓ 已检测 |
-| BLEU-4 | 1.0000 |
-| SARI | 1.0000 |
-| GLEU | 1.0000 |
-| METEOR | 0.9993 |
-| xMatch | ✓ |
-
-**原注释 (source)**
-```
-@param contextWrappableAs the contextWrappableAs to filter providers by
-```
-
-**标准注释 (ground truth)**
-```
-@param type the type to filter providers by
-```
-
-**生成注释 (generated)**
-```
-@param type the type to filter providers by
-```
-
-**代码片段**
-```java
-   public static Iterable<ProviderMetadata<?, ?, ?, ?>> boundedByIso3166Code(String iso3166Code, ApiType type) {
-      return filter(all(),
-            Predicates.and(ProviderPredicates.boundedByIso3166Code(iso3166Code), ProviderPredicates.type(type)));
-   }
-
 
 ```
 
