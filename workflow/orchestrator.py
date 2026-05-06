@@ -12,11 +12,12 @@ class WorkflowOrchestrator:
     管理和协调多个智能体的交互流，确保按照既定的执行顺序处理代码和注释。
     """
 
-    def __init__(self, model_name: str = "glm-4-flash", max_retries: int = 3, detect_only: bool = False, verbose: bool = False, parser_mode: str = "treesitter", use_diff: bool = False):
+    def __init__(self, model_name: str = "glm-4-flash", max_retries: int = 3, detect_only: bool = False, verbose: bool = False, parser_mode: str = "treesitter", use_diff: bool = False, skip_review: bool = False):
         self.model_name = model_name
         self.detect_only = detect_only
         self.verbose = verbose
         self.use_diff = use_diff
+        self.skip_review = skip_review
         self.parser = ContextParserAgent(model_name=model_name, parser_mode=parser_mode)
         self.retriever = ExampleRetriever()
         self.summary_retriever = ExampleRetriever(
@@ -94,38 +95,39 @@ class WorkflowOrchestrator:
                 state.log("[Orchestrator] (仅检测模式) 发现不一致，跳过修正与审查。")
             return state
 
-        # 5. 如果发现不一致，进入修正与反思循环
+        # 5. 如果发现不一致，进入修正（与可选的审查循环）
         if not state.is_consistent:
-            retries = 0
-            while retries < self.max_retries:
-                state.log(
-                    f"[Orchestrator] 开始修正循环，尝试次数 {retries + 1}/{self.max_retries}..."
-                )
-
-                # 修正常试
+            if self.skip_review:
+                state.log("[Orchestrator] 开始单次修正（跳过审查）...")
                 state = self.rectifier.process(state)
-
-                # 审查智能体进行审查
-                state = self.reviewer.process(state)
-
-                # 判断是否通过审查
-                if state.review_passed:
-                    state.log("[Orchestrator] 修正后的注释通过审查。工作流成功完成。")
-                    break
-                else:
+                state.review_passed = True
+                state.log("[Orchestrator] 修正完成（审查已跳过）。")
+            else:
+                retries = 0
+                while retries < self.max_retries:
                     state.log(
-                        f"[Orchestrator] 审查未通过，准备重试。反馈信息: {state.review_feedback}"
+                        f"[Orchestrator] 开始修正循环，尝试次数 {retries + 1}/{self.max_retries}..."
                     )
-                    # 将反馈信息补充到检测报告中，使得下一次修正能包含这些建议
-                    state.inconsistency_reason += (
-                        f"\n审查官反馈补充: {state.review_feedback}"
-                    )
-                    retries += 1
 
-            if retries == self.max_retries:
-                state.log(
-                    "[Orchestrator] 达到最大重试次数，终止工作流。请人工介入审查。"
-                )
+                    state = self.rectifier.process(state)
+                    state = self.reviewer.process(state)
+
+                    if state.review_passed:
+                        state.log("[Orchestrator] 修正后的注释通过审查。工作流成功完成。")
+                        break
+                    else:
+                        state.log(
+                            f"[Orchestrator] 审查未通过，准备重试。反馈信息: {state.review_feedback}"
+                        )
+                        state.inconsistency_reason += (
+                            f"\n审查官反馈补充: {state.review_feedback}"
+                        )
+                        retries += 1
+
+                if retries == self.max_retries:
+                    state.log(
+                        "[Orchestrator] 达到最大重试次数，终止工作流。请人工介入审查。"
+                    )
         else:
             state.log("[Orchestrator] 原代码与注释一致，无需后续流程。")
 

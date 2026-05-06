@@ -116,6 +116,7 @@ class Evaluator:
         generated_comments: List[str],
         sample_ids: List[str] = None,
         code_snippets: List[str] = None,
+        old_code_snippets: List[str] = None,
         detected_flags: List[bool] = None,
         trace_file: str = None,
     ) -> Dict[str, float]:
@@ -166,7 +167,7 @@ class Evaluator:
         if trace_file and sample_ids and len(sample_ids) == total:
             Evaluator._write_trace_report(
                 trace_file, sample_ids, sources, ground_truths,
-                generated_comments, code_snippets, detected_flags,
+                generated_comments, code_snippets, old_code_snippets, detected_flags,
                 bleu_scores, sari_scores, gleu_scores, meteor_scores_list,
                 {"xMatch (%)": round(xmatch_rate * 100, 2), "BLEU-4": round(avg_bleu, 4),
                  "GLEU": round(avg_gleu, 4), "Meteor": round(avg_meteor, 4),
@@ -187,11 +188,13 @@ class Evaluator:
     def _write_trace_report(
         path: str, ids: List[str], sources: List[str],
         refs: List[str], hyps: List[str],
-        codes: List[str], detected: List[bool],
+        codes: List[str], old_codes: List[str], detected: List[bool],
         bleu: List[float], sari: List[float],
         gleu: List[float], meteor: List[float],
         summary: Dict,
     ):
+        import difflib
+
         with open(path, "w", encoding="utf-8") as f:
             f.write("# Rectifier 逐样本追踪报告\n\n")
             f.write("## 汇总指标\n\n")
@@ -199,7 +202,6 @@ class Evaluator:
                 f.write(f"- **{k}**: {v}\n")
             f.write("\n")
 
-            # Summary table sorted by SARI ascending (worst first)
             ranked = sorted(range(len(ids)), key=lambda i: sari[i])
             f.write("## 汇总一览（按 SARI 升序，最差排前）\n\n")
             f.write("| # | ID | 检测到 | xMatch | BLEU-4 | SARI | METEOR | 原注释(前60) | 生成(前60) |\n")
@@ -236,7 +238,23 @@ class Evaluator:
                     code_display = "\n".join(code_lines[:30])
                     if len(code_lines) > 30:
                         code_display += "\n// ... (truncated)"
-                    f.write(f"**代码片段**\n```java\n{code_display}\n```\n\n")
+                    f.write(f"**当前代码 (new_code)**\n```java\n{code_display}\n```\n\n")
+
+                has_old = old_codes and i < len(old_codes) and old_codes[i].strip()
+                if has_old:
+                    old_lines = old_codes[i].split("\n")
+                    old_display = "\n".join(old_lines[:30])
+                    if len(old_lines) > 30:
+                        old_display += "\n// ... (truncated)"
+                    f.write(f"**变更前代码 (old_code)**\n```java\n{old_display}\n```\n\n")
+
+                    old_diff = old_codes[i].strip().splitlines(keepends=True)
+                    new_diff = codes[i].strip().splitlines(keepends=True)
+                    diff_lines = list(difflib.unified_diff(
+                        old_diff, new_diff, fromfile="old_code", tofile="new_code", lineterm=""))
+                    if diff_lines:
+                        diff_text = "\n".join(diff_lines[:40])
+                        f.write(f"**代码变更 (diff)**\n```diff\n{diff_text}\n```\n\n")
 
                 f.write("---\n\n")
 

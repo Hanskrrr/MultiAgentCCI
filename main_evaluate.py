@@ -70,6 +70,11 @@ def main():
         default=2,
         help="Reviewer 审查不通过时的最大重试次数 (默认 2，设为 1 则不重试)",
     )
+    parser.add_argument(
+        "--skip-review",
+        action="store_true",
+        help="跳过 Reviewer 审查环节，Rectifier 输出直接作为最终结果",
+    )
     args = parser.parse_args()
 
     print("===================================================")
@@ -107,7 +112,7 @@ def main():
     print(f"[*] 数据集加载完成，共计 {len(dataset)} 条有效数据。\n")
 
     # 初始化工作流引擎
-    orchestrator = WorkflowOrchestrator(model_name=args.model, max_retries=args.max_retries, detect_only=args.detect_only, verbose=args.verbose, parser_mode=args.parser, use_diff=args.use_diff)
+    orchestrator = WorkflowOrchestrator(model_name=args.model, max_retries=args.max_retries, detect_only=args.detect_only, verbose=args.verbose, parser_mode=args.parser, use_diff=args.use_diff, skip_review=args.skip_review)
 
     # 用于收集评估结果的容器
     y_true_detection = []
@@ -118,6 +123,7 @@ def main():
     generated_rectifications = []
     rectify_sample_ids = []
     rectify_code_snippets = []
+    rectify_old_code_snippets = []
     rectify_detected = []
 
     # 2. 遍历数据集进行批量测试
@@ -140,6 +146,7 @@ def main():
             ground_truths_rectification.append(data["ground_truth_comment"])
             rectify_sample_ids.append(data["id"])
             rectify_code_snippets.append(data["code_snippet"])
+            rectify_old_code_snippets.append(data.get("old_code_snippet", ""))
             detected = result_state.is_consistent is False
             rectify_detected.append(detected)
             if detected and result_state.rectified_comment:
@@ -196,6 +203,7 @@ def main():
             generated_comments=generated_rectifications,
             sample_ids=rectify_sample_ids if args.trace_rectify else None,
             code_snippets=rectify_code_snippets if args.trace_rectify else None,
+            old_code_snippets=rectify_old_code_snippets if args.trace_rectify else None,
             detected_flags=rectify_detected if args.trace_rectify else None,
             trace_file=trace_path,
         )
