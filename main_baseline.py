@@ -1,6 +1,6 @@
 """
 Baseline 实验：使用单一大模型（无提示词工程、无多智能体）进行注释一致性检测与修正。
-用于与多智能体框架进行对比。
+单次调用同时完成检测和修正，用于与多智能体框架进行对比。
 
 用法:
   python main_baseline.py --model glm-4-plus --category Return
@@ -14,7 +14,7 @@ from evaluation.evaluator import Evaluator
 
 
 class NaiveLLMBaseline(BaseAgent):
-    """单一 LLM baseline：不加任何 prompt 工程，用最朴素的指令检测和修正。"""
+    """单一 LLM baseline：一次调用同时完成检测和修正。"""
 
     def __init__(self, model_name: str = "glm-4-flash"):
         super().__init__(name="NaiveBaseline", model_name=model_name)
@@ -22,40 +22,41 @@ class NaiveLLMBaseline(BaseAgent):
     def process(self, state: CodeCommentState) -> CodeCommentState:
         raise NotImplementedError
 
-    def detect(self, code: str, comment: str) -> bool:
+    def detect_and_rectify(self, code: str, comment: str) -> tuple:
+        """
+        Single LLM call: detect consistency and rectify if needed.
+        Returns (is_consistent: bool, rectified_comment: str or None)
+        """
         system_prompt = "You are a software engineering assistant."
         prompt = (
             f"Given the following code and its comment, determine whether the comment "
-            f"is consistent with the code. Answer with ONLY one word: CONSISTENT or INCONSISTENT.\n\n"
+            f"is consistent with the code.\n\n"
+            f"- If the comment is CONSISTENT with the code, output ONLY the single word: CONSISTENT\n"
+            f"- If the comment is INCONSISTENT, output ONLY the corrected comment text "
+            f"(no explanations, no labels, no quotes).\n\n"
             f"Code:\n{code}\n\n"
             f"Comment:\n{comment}"
         )
         try:
-            response = self._call_llm(prompt, system_prompt)
-            return "INCONSISTENT" not in response.upper()
+            response = self._call_llm(prompt, system_prompt).strip()
+            response = response.strip('"').strip("'").strip("`")
+            upper = response.upper().strip().rstrip(".")
+            if upper == "CONSISTENT":
+                return True, None
+            if upper.startswith("CONSISTENT"):
+                words = upper.split()
+                if len(words) <= 3:
+                    return True, None
+            return False, response
         except Exception as e:
             print(f"    [Error] {e}")
-            return True
-
-    def rectify(self, code: str, comment: str) -> str:
-        system_prompt = "You are a software engineering assistant."
-        prompt = (
-            f"The following code comment is inconsistent with the code. "
-            f"Fix the comment to match the code. Output ONLY the corrected comment.\n\n"
-            f"Code:\n{code}\n\n"
-            f"Comment:\n{comment}"
-        )
-        try:
-            return self._call_llm(prompt, system_prompt).strip()
-        except Exception as e:
-            print(f"    [Error] rectify: {e}")
-            return comment
+            return True, None
 
 
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Baseline: 单一 LLM 检测+修正（无 prompt 工程）")
+    parser = argparse.ArgumentParser(description="Baseline: 单一 LLM 一次调用检测+修正（无 prompt 工程）")
     parser.add_argument("--model", type=str, default="glm-4-flash",
                         choices=["glm-4-flash", "glm-4-plus", "glm-4.7", "glm-4.7-flash", "glm-5",
                                  "deepseek-chat", "deepseek-reasoner",
@@ -67,7 +68,7 @@ def main():
     args = parser.parse_args()
 
     print("===================================================")
-    print(f"= Baseline 单模型检测+修正（无 prompt 工程） ({args.model}) =")
+    print(f"= Baseline 单次调用检测+修正（无 prompt 工程） ({args.model}) =")
     print("===================================================\n")
 
     data_path = os.path.join("data", "eval_dataset.jsonl")
@@ -101,26 +102,26 @@ def main():
     for i, data in enumerate(dataset):
         print(f"--- 正在处理第 {i + 1}/{len(dataset)} 条 (ID: {data['id']}) ---")
 
-        pred_consistent = baseline.detect(data["code_snippet"], data["original_comment"])
+        is_consistent, rectified = baseline.detect_and_rectify(
+            data["code_snippet"], data["original_comment"])
 
         y_true.append(data["label_consistent"])
-        y_pred.append(pred_consistent)
+        y_pred.append(is_consistent)
 
         if data["label_consistent"] is False:
             sources_rectification.append(data["original_comment"])
             ground_truths_rectification.append(data["ground_truth_comment"])
-            detected = not pred_consistent
-            if detected:
-                rectified = baseline.rectify(data["code_snippet"], data["original_comment"])
+            detected = not is_consistent
+            if detected and rectified:
                 generated_rectifications.append(rectified)
             else:
                 generated_rectifications.append(data["original_comment"])
 
-        is_correct = data["label_consistent"] == pred_consistent
+        is_correct = data["label_consistent"] == is_consistent
         mark = "✓" if is_correct else "✗"
         print(
             f"    {mark} 真实: {'一致' if data['label_consistent'] else '不一致'} | "
-            f"预测: {'一致' if pred_consistent else '不一致'}"
+            f"预测: {'一致' if is_consistent else '不一致'}"
         )
 
     print("\n[*] 正在计算评估指标...")
