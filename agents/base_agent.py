@@ -31,12 +31,27 @@ def _apply_proxy():
     proxy = os.getenv("HTTPS_PROXY") or os.getenv("HTTP_PROXY")
     if not proxy:
         return
+    os.environ.setdefault("ALL_PROXY", proxy)
     try:
         with open("/proc/version") as f:
             is_wsl = "microsoft" in f.read().lower()
     except OSError:
         is_wsl = False
     if is_wsl and "127.0.0.1" in proxy:
+        try:
+            # Newer WSL mirrored networking can access Windows localhost directly.
+            # Keep 127.0.0.1 when it is reachable; only rewrite for older NAT mode.
+            import socket
+            from urllib.parse import urlparse
+
+            parsed = urlparse(proxy)
+            host = parsed.hostname or "127.0.0.1"
+            port = parsed.port or 7897
+            with socket.create_connection((host, port), timeout=1):
+                return
+        except Exception:
+            pass
+
         try:
             import subprocess
             result = subprocess.run(
