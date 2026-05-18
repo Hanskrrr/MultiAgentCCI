@@ -122,7 +122,7 @@ class BaseAgent(ABC):
             response = client.chat.completions.create(
                 model=self.model_name,
                 messages=messages,
-                temperature=0.1,
+                temperature=0.0,
             )
             return response.choices[0].message.content or ""  # type: ignore
 
@@ -135,7 +135,7 @@ class BaseAgent(ABC):
             response = client.chat.completions.create(
                 model=self.model_name,
                 messages=messages,
-                temperature=0.1,
+                temperature=0.0,
             )
             return response.choices[0].message.content or ""
 
@@ -150,7 +150,7 @@ class BaseAgent(ABC):
             response = client.chat.completions.create(
                 model=self.model_name,
                 messages=messages,
-                temperature=0.1,
+                temperature=0.0,
             )
             return response.choices[0].message.content or ""
 
@@ -165,7 +165,7 @@ class BaseAgent(ABC):
             system_text = messages[0]["content"] if messages[0]["content"] else None
             user_text = messages[1]["content"] if len(messages) > 1 else ""
             config = google_genai_types.GenerateContentConfig(
-                temperature=0.1,
+                temperature=0.0,
                 system_instruction=system_text,
             )
             response = client.models.generate_content(
