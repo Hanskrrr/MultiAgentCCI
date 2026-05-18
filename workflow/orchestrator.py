@@ -2,7 +2,6 @@ from core.state import CodeCommentState
 from agents.context_parser_agent import ContextParserAgent
 from agents.detector_agent import DetectorAgent
 from agents.rectifier_agent import RectifierAgent
-from agents.reviewer_agent import ReviewerAgent
 from retrieval.example_retriever import ExampleRetriever
 
 
@@ -41,7 +40,6 @@ class WorkflowOrchestrator:
             summary_retriever=self.summary_retriever,
             param_retriever=self.param_retriever,
         )
-        self.reviewer = ReviewerAgent(model_name=model_name)
 
         self.max_retries = max_retries
 
@@ -95,13 +93,13 @@ class WorkflowOrchestrator:
                 state.log("[Orchestrator] (仅检测模式) 发现不一致，跳过修正与审查。")
             return state
 
-        # 5. 如果发现不一致，进入修正（与可选的审查循环）
+        # 5. 如果发现不一致，进入修正（与可选的 Detector 复审循环）
         if not state.is_consistent:
             if self.skip_review:
-                state.log("[Orchestrator] 开始单次修正（跳过审查）...")
+                state.log("[Orchestrator] 开始单次修正（跳过复审）...")
                 state = self.rectifier.process(state)
                 state.review_passed = True
-                state.log("[Orchestrator] 修正完成（审查已跳过）。")
+                state.log("[Orchestrator] 修正完成（复审已跳过）。")
             else:
                 retries = 0
                 while retries < self.max_retries:
@@ -110,20 +108,36 @@ class WorkflowOrchestrator:
                     )
 
                     state = self.rectifier.process(state)
-                    state = self.reviewer.process(state)
 
-                    if state.review_passed:
-                        state.log("[Orchestrator] 修正后的注释通过审查。工作流成功完成。")
+                    review_state = CodeCommentState(
+                        code_snippet=state.code_snippet,
+                        original_comment=state.rectified_comment,
+                        old_code_snippet=state.old_code_snippet,
+                    )
+                    review_state.ast_context = state.ast_context
+                    review_state.intention_context = state.intention_context
+                    review_state.interface_context = state.interface_context
+                    review_state.implementation_context = state.implementation_context
+
+                    review_state = self.detector.process(review_state)
+
+                    if review_state.is_consistent:
+                        state.review_passed = True
+                        state.review_feedback = "Detector 复审通过，修正后注释与代码一致。"
+                        state.log("[Orchestrator] 修正后的注释通过 Detector 复审。工作流成功完成。")
                         break
                     else:
+                        state.review_passed = False
+                        state.review_feedback = review_state.inconsistency_reason
                         state.log(
-                            f"[Orchestrator] 审查未通过，准备重试。反馈信息: {state.review_feedback}"
+                            f"[Orchestrator] Detector 复审未通过，准备重试。反馈信息: {state.review_feedback[:80]}"
                         )
                         state.inconsistency_reason += (
-                            f"\n审查官反馈补充: {state.review_feedback}"
+                            f"\nDetector 复审反馈: {state.review_feedback}"
                         )
                         retries += 1
 
+                state.review_retries = retries
                 if retries == self.max_retries:
                     state.log(
                         "[Orchestrator] 达到最大重试次数，终止工作流。请人工介入审查。"

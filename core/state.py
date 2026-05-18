@@ -31,9 +31,10 @@ class CodeCommentState:
     # 修正智能体结果
     rectified_comment: str = ""
 
-    # 审查智能体结果
+    # 复审结果
     review_passed: Optional[bool] = None
     review_feedback: str = ""
+    review_retries: int = 0
 
     # 记录执行历史
     history: List[str] = field(default_factory=list)

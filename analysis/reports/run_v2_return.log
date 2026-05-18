@@ -1,0 +1,324 @@
+===================================================
+= 多智能体代码注释一致性系统 - 数据集批量评估模式 (deepseek-chat) =
+===================================================
+
+[*] 正在加载数据集: data/eval_dataset.jsonl
+[*] 已按类型筛选: Return，剩余 1789 条数据。
+[*] 数据集加载完成，共计 1789 条有效数据。
+
+--- 正在处理第 1/1789 条数据 (ID: Return_0) ---
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 43939.52it/s]
+    ✓ 真实标签: 不一致 | 预测标签: 不一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return an open input stream, or null if no suitable output was produced
+    [DEBUG] 接口签名: Full Signature: getGeneratedOutput() -> File throws CurnException
+Parameters Details: []
+    [DEBUG] 规则信号: Parsed return type from signature: File
+    [DEBUG] 规则信号: Method declares throws ['CurnException'] but @return comment does not mention exceptions.
+    [DEBUG] 规则信号: RETURN TYPE CHANGED: 'InputStream' -> 'File'. If the comment references the old return type, it is INCONSISTENT.
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "an open input stream" → The code now returns a `File` object, not an `InputStream`. This claim is NO.
+- Claim 2: "or null if n
+
+--- 正在处理第 2/1789 条数据 (ID: Return_1) ---
+    ✓ 真实标签: 一致 | 预测标签: 一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return the response to write to. Cannot be null.
+    [DEBUG] 接口签名: Full Signature: getResponse() -> HttpServletResponse
+Parameters Details: []
+    [DEBUG] 规则信号: Parsed return type from signature: HttpServletResponse
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "the response to write to" → The method returns `this.response`, which is an `HttpServletResponse` object representing the resp
+
+--- 正在处理第 3/1789 条数据 (ID: Return_2) ---
+    ✓ 真实标签: 不一致 | 预测标签: 不一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return The string representation as a comma-separated list of simple annotation names.
+    [DEBUG] 接口签名: Full Signature: toString() -> String
+Parameters Details: []
+    [DEBUG] 规则信号: Parsed return type from signature: String
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'List' which no longer exists in new code.
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "The string representation" → matches code? YES (toString() returns a String)
+- Claim 2: "as a comma-separated list" → matches 
+
+--- 正在处理第 4/1789 条数据 (ID: Return_3) ---
+    ✓ 真实标签: 一致 | 预测标签: 一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return actual schema
+    [DEBUG] 接口签名: Full Signature: unaliasSchema(Map<String, Schema> allSchemas, Schema schema) -> Schema
+Parameters Details: [{"name": "al
+    [DEBUG] 规则信号: Parsed return type from signature: Schema
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "actual schema" → The method returns a `Schema` object, which is the schema after unaliasing. The comment says "actual schema,"
+
+--- 正在处理第 5/1789 条数据 (ID: Return_4) ---
+    ✓ 真实标签: 不一致 | 预测标签: 不一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return an instance of the specified class
+    [DEBUG] 接口签名: Full Signature: newCometSupport(Class<? extends AsyncSupport> targetClass) -> AsyncSupport
+Parameters Details: [{"name":
+    [DEBUG] 规则信号: Parsed return type from signature: AsyncSupport
+    [DEBUG] 规则信号: Code contains 'return null' branch but @return comment does not mention null.
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "an instance of the specified class" → The code returns `(AsyncSupport) targetClass.getDeclaredConstructor(...).newInstance(con
+
+--- 正在处理第 6/1789 条数据 (ID: Return_5) ---
+    ✓ 真实标签: 一致 | 预测标签: 一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return the parent type information
+    [DEBUG] 接口签名: Full Signature: getParent() -> ExecutionInfo
+Parameters Details: []
+    [DEBUG] 规则信号: Parsed return type from signature: ExecutionInfo
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "the parent type information" → The code returns `parentInfo`, which is a variable of type `ExecutionInfo`. The comment describ
+
+--- 正在处理第 7/1789 条数据 (ID: Return_6) ---
+    ✓ 真实标签: 不一致 | 预测标签: 不一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return {@code TokenStream} to tokenize the text
+    [DEBUG] 接口签名: Full Signature: getDefaultTokenStream() -> TwitterTokenStream
+Parameters Details: []
+    [DEBUG] 规则信号: Parsed return type from signature: TwitterTokenStream
+    [DEBUG] 规则信号: RETURN TYPE CHANGED: 'TokenStream' -> 'TwitterTokenStream'. If the comment references the old return type, it is INCONSISTENT.
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'TokenStream' which no longer exists in new code. Possible renames: ['TwitterTokenStream'].
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "returns a TokenStream" → The comment says `{@code TokenStream}`, but the current code returns `TwitterTokenStream`. The return
+
+--- 正在处理第 8/1789 条数据 (ID: Return_7) ---
+    ✓ 真实标签: 一致 | 预测标签: 一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return  true if more scrolling can be done
+    [DEBUG] 接口签名: Full Signature: scroll(int direction) -> boolean
+Parameters Details: [{"name": "direction", "type": "int"}]
+    [DEBUG] 规则信号: Parsed return type from signature: boolean
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "true if more scrolling can be done" → matches code? YES, the method returns `true` when scrolling is performed (via `scrollLis
+
+--- 正在处理第 9/1789 条数据 (ID: Return_8) ---
+    ✓ 真实标签: 不一致 | 预测标签: 不一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return Host name and port, as a string.
+    [DEBUG] 接口签名: Full Signature: getHostFromUrl(String url) -> String
+Parameters Details: [{"name": "url", "type": "String"}]
+    [DEBUG] 规则信号: Parsed return type from signature: String
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "Host name and port" → The code now returns only the host name (via `authority.substring(0, idx)` after stripping the port), no
+
+--- 正在处理第 10/1789 条数据 (ID: Return_9) ---
+    ✓ 真实标签: 一致 | 预测标签: 一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return the converted value, or null if the conversion could not be made and the column allows nulls
+    [DEBUG] 接口签名: Full Signature: convertSetToString(List<String> options, Column column, Field fieldDefn, Object data) -> Object
+Paramete
+    [DEBUG] 规则信号: Parsed return type from signature: Object
+    [DEBUG] 规则信号: Code has an explicit null return branch.
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "the converted value" → The method returns a converted value (String, Long, or result of `convertSetValue` or `handleUnknownDat
+
+--- 正在处理第 11/1789 条数据 (ID: Return_10) ---
+    ✓ 真实标签: 不一致 | 预测标签: 不一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return the ApplicationConfig object
+    [DEBUG] 接口签名: Full Signature: getModuleConfig(HttpServletRequest request, ServletContext context) -> ModuleConfig
+Parameters Details: 
+    [DEBUG] 规则信号: Parsed return type from signature: ModuleConfig
+    [DEBUG] 规则信号: RETURN TYPE CHANGED: 'ApplicationConfig' -> 'ModuleConfig'. If the comment references the old return type, it is INCONSISTENT.
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'ApplicationConfig' which no longer exists in new code.
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "the ApplicationConfig object" → The comment claims the method returns an `ApplicationConfig` object. However, the current code
+
+--- 正在处理第 12/1789 条数据 (ID: Return_11) ---
+    ✓ 真实标签: 一致 | 预测标签: 一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return an optional error
+    [DEBUG] 接口签名: Full Signature: add(Definition definition) -> Optional<GraphQLError>
+Parameters Details: [{"name": "definition", "type":
+    [DEBUG] 规则信号: Parsed return type from signature: Optional<GraphQLError>
+    [DEBUG] 规则信号: Code returns empty collection/Optional but comment does not mention empty case.
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "return an optional error" → The method signature returns `Optional<GraphQLError>`, and the code returns `Optional.of(...)` wit
+
+--- 正在处理第 13/1789 条数据 (ID: Return_12) ---
+    ✓ 真实标签: 不一致 | 预测标签: 不一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return <code>true</code> if the button is visible and Popup Menu is assigned.
+    [DEBUG] 接口签名: Full Signature: isButtonOverflowVisible() -> boolean
+Parameters Details: []
+    [DEBUG] 规则信号: Parsed return type from signature: boolean
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "the button is visible" → The code returns `mIsButtonOverflowVisible`, which is a boolean indicating whether the button is visi
+
+--- 正在处理第 14/1789 条数据 (ID: Return_13) ---
+    ✗ 真实标签: 一致 | 预测标签: 不一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return a copy of this datetime with the field set
+    [DEBUG] 接口签名: Full Signature: withField(DateTimeFieldType fieldType, int value) -> DateTime
+Parameters Details: [{"name": "fieldType",
+    [DEBUG] 规则信号: Parsed return type from signature: DateTime
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'this' which no longer exists in new code. Possible renames: ['throw'].
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "a copy of this datetime" → The code returns `withMillis(instant)`, which returns a new DateTime object (a copy). However, the 
+    [DEBUG] >>> 此条判定错误 <<<
+
+--- 正在处理第 15/1789 条数据 (ID: Return_14) ---
+    ✓ 真实标签: 不一致 | 预测标签: 不一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return the {@link Cursor} backing this SquidCursor
+    [DEBUG] 接口签名: Full Signature: getCursor() -> ICursor
+Parameters Details: []
+    [DEBUG] 规则信号: Parsed return type from signature: ICursor
+    [DEBUG] 规则信号: Explicit return type mentions in comment: ['Cursor']
+    [DEBUG] 规则信号: RETURN TYPE CHANGED: 'Cursor' -> 'ICursor'. If the comment references the old return type, it is INCONSISTENT.
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'Cursor' which no longer exists in new code.
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "the {@link Cursor} backing this SquidCursor" → The comment claims the method returns a `Cursor` object. The current code retur
+
+--- 正在处理第 16/1789 条数据 (ID: Return_15) ---
+    ✓ 真实标签: 一致 | 预测标签: 一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return Client
+    [DEBUG] 接口签名: Full Signature: testClassname(Client body) -> Client throws ApiException
+Parameters Details: [{"name": "body", "type": "
+    [DEBUG] 规则信号: Parsed return type from signature: Client
+    [DEBUG] 规则信号: Method declares throws ['ApiException'] but @return comment does not mention exceptions.
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "Client" → The method signature returns `Client`, and the code returns `localVarResp.getData()` which is of type `Client`. This
+
+--- 正在处理第 17/1789 条数据 (ID: Return_16) ---
+    ✓ 真实标签: 不一致 | 预测标签: 不一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return Whether is successful to set the task completed. If the  path not exist will be false; If the length of the file
+    [DEBUG] 接口签名: Full Signature: setTaskCompleted(List<FileDownloadTaskAtom> taskAtomList) -> boolean
+Parameters Details: [{"name": "task
+    [DEBUG] 规则信号: Parsed return type from signature: boolean
+    [DEBUG] 规则信号: PARAMETERS CHANGED: removed params: {'url', 'path', 'totalBytes'}; added params: {'taskAtomList'}.
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'path' which no longer exists in new code.
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'totalBytes' which no longer exists in new code. Possible renames: ['taskAtomList'].
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "Whether is successful to set the task completed." → matches code? YES (the method returns a boolean indicating success/failure
+
+--- 正在处理第 18/1789 条数据 (ID: Return_17) ---
+    ✓ 真实标签: 一致 | 预测标签: 一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return the date
+    [DEBUG] 接口签名: Full Signature: fromISODateString(String isoDateString) -> Date throws Exception
+Parameters Details: [{"name": "isoDateS
+    [DEBUG] 规则信号: Parsed return type from signature: Date
+    [DEBUG] 规则信号: Method declares throws ['Exception'] but @return comment does not mention exceptions.
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'date' which no longer exists in new code. Possible renames: ['dateTime', 'dateTimeParser', 'DateTime'].
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "the date" → The method returns a `java.util.Date` object, which is a date. This matches the code. YES
+
+--- 正在处理第 19/1789 条数据 (ID: Return_18) ---
+    ✗ 真实标签: 不一致 | 预测标签: 一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return A SqlParser object.
+    [DEBUG] 接口签名: Full Signature: create(String sql, Config config) -> SqlParser
+Parameters Details: [{"name": "sql", "type": "String"}, {
+    [DEBUG] 规则信号: Parsed return type from signature: SqlParser
+    [DEBUG] 规则信号: Explicit return type mentions in comment: ['SqlParser']
+    [DEBUG] 规则信号: PARAMETERS CHANGED: removed params: {'s'}; added params: {'sql', 'config'}.
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "A SqlParser object" → The method returns `new SqlParser(sql, parser, config)`, which is indeed a `SqlParser` object. YES
+    [DEBUG] 标准注释: @return A parser
+    [DEBUG] >>> 此条判定错误 <<<
+
+--- 正在处理第 20/1789 条数据 (ID: Return_19) ---
+    ✓ 真实标签: 一致 | 预测标签: 一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return parquet table metadata object
+    [DEBUG] 接口签名: Full Signature: getParquetTableMetadata(Map<FileStatus, FileSystem> fileStatusMap) -> ParquetTableMetadata_v4 throws IOE
+    [DEBUG] 规则信号: Parsed return type from signature: ParquetTableMetadata_v4
+    [DEBUG] 规则信号: Method declares throws ['IOException'] but @return comment does not mention exceptions.
+    [DEBUG] 规则信号: RETURN TYPE CHANGED: 'ParquetTableMetadata_v3' -> 'ParquetTableMetadata_v4'. If the comment references the old return type, it is INCONSISTENT.
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "parquet table metadata object" → The method returns `ParquetTableMetadata_v4`, which is a parquet table metadata object. The c
+
+--- 正在处理第 21/1789 条数据 (ID: Return_20) ---
+    ✓ 真实标签: 不一致 | 预测标签: 不一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return javax.swing.JTextField
+    [DEBUG] 接口签名: Full Signature: getTxtEncode() -> ZapTextArea
+Parameters Details: []
+    [DEBUG] 规则信号: Parsed return type from signature: ZapTextArea
+    [DEBUG] 规则信号: RETURN TYPE CHANGED: 'JTextArea' -> 'ZapTextArea'. If the comment references the old return type, it is INCONSISTENT.
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "javax.swing.JTextField" → The comment claims the return type is `javax.swing.JTextField`. However, the current code returns `Z
+
+--- 正在处理第 22/1789 条数据 (ID: Return_21) ---
+    ✓ 真实标签: 一致 | 预测标签: 一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return The attribute bindings.
+    [DEBUG] 接口签名: Full Signature: getAttributeBindingClosure() -> Iterable<AttributeBinding>
+Parameters Details: []
+    [DEBUG] 规则信号: Parsed return type from signature: Iterable<AttributeBinding>
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'bindings' which no longer exists in new code.
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'attribute' which no longer exists in new code. Possible renames: ['account', 'ArrayList'].
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "The attribute bindings" → The comment describes the return value as "The attribute bindings." The current code returns an `Ite
+
+--- 正在处理第 23/1789 条数据 (ID: Return_22) ---
+    ✓ 真实标签: 不一致 | 预测标签: 不一致 | 判定方式: rule | 注释类型: return
+    [DEBUG] 注释内容: @return a List of the combined {@link BulletRecord} so far. The List has a size that is at most the maximum specified by
+    [DEBUG] 接口签名: Full Signature: getAggregation() -> Clip
+Parameters Details: []
+    [DEBUG] 规则信号: Parsed return type from signature: Clip
+    [DEBUG] 规则信号: Explicit return type mentions in comment: ['BulletRecord', 'Aggregation']
+    [DEBUG] 规则信号: RETURN TYPE CHANGED: 'List<BulletRecord>' -> 'Clip'. If the comment references the old return type, it is INCONSISTENT.
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'List' which no longer exists in new code.
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'BulletRecord' which no longer exists in new code.
+    [DEBUG] 规则硬判: Return type/class mismatch: comment mentions ['BulletRecord', 'Aggregation'], but code signature returns Clip.
+    [DEBUG] 不一致原因: Return type/class mismatch: comment mentions ['BulletRecord', 'Aggregation'], but code signature returns Clip.
+Detector 复审反馈: Return type/class mismatch: comment mentions ['BulletRecord', 'Aggregation
+
+--- 正在处理第 24/1789 条数据 (ID: Return_23) ---
+    ✗ 真实标签: 一致 | 预测标签: 不一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return the  ImageView with a specified index or  null if index is invalid
+    [DEBUG] 接口签名: Full Signature: getImage(int index) -> ImageView
+Parameters Details: [{"name": "index", "type": "int"}]
+    [DEBUG] 规则信号: Parsed return type from signature: ImageView
+    [DEBUG] 规则信号: Explicit return type mentions in comment: ['ImageView']
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'image' which no longer exists in new code.
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'with' which no longer exists in new code.
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'null' which no longer exists in new code.
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'view' which no longer exists in new code.
+    [DEBUG] 规则信号: IDENTIFIER DRIFT: comment mentions 'imageView' which no longer exists in new code.
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "returns the ImageView" → The code returns `getView(ImageView.class, index)`, which returns an `ImageView` object. This matches
+    [DEBUG] >>> 此条判定错误 <<<
+
+--- 正在处理第 25/1789 条数据 (ID: Return_24) ---
+    ✗ 真实标签: 不一致 | 预测标签: 一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return new background color based on the supplied foreground color
+    [DEBUG] 接口签名: Full Signature: invertBgColor() -> Color
+Parameters Details: []
+    [DEBUG] 规则信号: Parsed return type from signature: Color
+    [DEBUG] 规则信号: RETURN TYPE CHANGED: 'int' -> 'Color'. If the comment references the old return type, it is INCONSISTENT.
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "new background color" → The method returns a `Color` object, which represents a new background color. This matches the code. Y
+    [DEBUG] 标准注释: @return new background color based on the foreground color
+    [DEBUG] >>> 此条判定错误 <<<
+
+--- 正在处理第 26/1789 条数据 (ID: Return_25) ---
+    ✗ 真实标签: 一致 | 预测标签: 不一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return capitalized model name
+    [DEBUG] 接口签名: Full Signature: toInterfaceName(String name) -> String
+Parameters Details: [{"name": "name", "type": "String"}]
+    [DEBUG] 规则信号: Parsed return type from signature: String
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "capitalized model name" → The code returns `camelize(interfaceNamePrefix + name + interfaceNameSuffix)`. The method `camelize`
+    [DEBUG] >>> 此条判定错误 <<<
+
+--- 正在处理第 27/1789 条数据 (ID: Return_26) ---
+    ✓ 真实标签: 不一致 | 预测标签: 不一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return ProjectRel corresponding to the right child
+    [DEBUG] 接口签名: Full Signature: getRightChild(RelOptRuleCall call) -> Project
+Parameters Details: [{"name": "call", "type": "RelOptRuleC
+    [DEBUG] 规则信号: Parsed return type from signature: Project
+    [DEBUG] 规则信号: RETURN TYPE CHANGED: 'ProjectRelBase' -> 'Project'. If the comment references the old return type, it is INCONSISTENT.
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "ProjectRel corresponding to the right child" → The comment mentions the return type as "ProjectRel". The current code returns 
+
+--- 正在处理第 28/1789 条数据 (ID: Return_27) ---
+    ✓ 真实标签: 一致 | 预测标签: 一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return true if the listener is performing the operation on the specified entity.
+    [DEBUG] 接口签名: Full Signature: isOperatedOn(Object entity) -> boolean
+Parameters Details: [{"name": "entity", "type": "Object"}]
+    [DEBUG] 规则信号: Parsed return type from signature: boolean
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "true if the listener is performing the operation on the specified entity" → The method returns a boolean value indicating whet
+
+--- 正在处理第 29/1789 条数据 (ID: Return_28) ---
+    ✓ 真实标签: 不一致 | 预测标签: 不一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return a Line
+    [DEBUG] 接口签名: Full Signature: getSoundChallenge() -> AudioInputStream
+Parameters Details: []
+    [DEBUG] 规则信号: Parsed return type from signature: AudioInputStream
+    [DEBUG] 规则信号: RETURN TYPE CHANGED: 'Sound' -> 'AudioInputStream'. If the comment references the old return type, it is INCONSISTENT.
+    [DEBUG] 不一致原因: Reasoning: Break the comment into claims and verify each one:
+- Claim 1: "a Line" → The comment claims the method returns a "Line", but the current code returns an `AudioInputStream`. The return type 
+
+--- 正在处理第 30/1789 条数据 (ID: Return_29) ---
+    ✓ 真实标签: 一致 | 预测标签: 一致 | 判定方式: llm | 注释类型: return
+    [DEBUG] 注释内容: @return SQL-92 string of that query.
+    [DEBUG] 接口签名: Full Signature: convertToSQL92(List<String> tokens) -> String
+Parameters Details: [{"name": "tokens", "type": "List<Stri

@@ -118,6 +118,7 @@ class Evaluator:
         code_snippets: List[str] = None,
         old_code_snippets: List[str] = None,
         detected_flags: List[bool] = None,
+        retry_counts: List[int] = None,
         trace_file: str = None,
     ) -> Dict[str, float]:
         """
@@ -172,6 +173,7 @@ class Evaluator:
                 {"xMatch (%)": round(xmatch_rate * 100, 2), "BLEU-4": round(avg_bleu, 4),
                  "GLEU": round(avg_gleu, 4), "Meteor": round(avg_meteor, 4),
                  "SARI": round(avg_sari, 4), "Samples_Evaluated": total},
+                retry_counts=retry_counts,
             )
             print(f"  [评估] 逐样本追踪报告已保存: {trace_file}")
 
@@ -192,27 +194,36 @@ class Evaluator:
         bleu: List[float], sari: List[float],
         gleu: List[float], meteor: List[float],
         summary: Dict,
+        retry_counts: List[int] = None,
     ):
         import difflib
 
+        has_retries = retry_counts and len(retry_counts) == len(ids)
+
         with open(path, "w", encoding="utf-8") as f:
-            f.write("# Rectifier 逐样本追踪报告\n\n")
+            f.write("# Rectifier 逐样本追踪报告 (v2 — Detector 复审)\n\n")
             f.write("## 汇总指标\n\n")
             for k, v in summary.items():
                 f.write(f"- **{k}**: {v}\n")
+            if has_retries:
+                total_retries = sum(retry_counts)
+                samples_with_retry = sum(1 for r in retry_counts if r > 0)
+                f.write(f"- **Detector 复审总重试次数**: {total_retries}\n")
+                f.write(f"- **触发重试的样本数**: {samples_with_retry}/{len(ids)}\n")
             f.write("\n")
 
             ranked = sorted(range(len(ids)), key=lambda i: sari[i])
             f.write("## 汇总一览（按 SARI 升序，最差排前）\n\n")
-            f.write("| # | ID | 检测到 | xMatch | BLEU-4 | SARI | METEOR | 原注释(前60) | 生成(前60) |\n")
-            f.write("|---|---|---|---|---|---|---|---|---|\n")
+            f.write("| # | ID | 检测到 | 复审重试 | xMatch | BLEU-4 | SARI | METEOR | 原注释(前60) | 生成(前60) |\n")
+            f.write("|---|---|---|---|---|---|---|---|---|---|\n")
             for rank, i in enumerate(ranked, 1):
                 det_mark = "✓" if (detected and detected[i]) else "✗(漏检)"
+                retry_str = str(retry_counts[i]) if has_retries else "-"
                 xm = "✓" if refs[i].strip() == hyps[i].strip() else ""
                 src_short = sources[i][:60].replace("|", "\\|").replace("\n", " ")
                 hyp_short = hyps[i][:60].replace("|", "\\|").replace("\n", " ")
                 f.write(
-                    f"| {rank} | `{ids[i]}` | {det_mark} | {xm} "
+                    f"| {rank} | `{ids[i]}` | {det_mark} | {retry_str} | {xm} "
                     f"| {bleu[i]:.3f} | {sari[i]:.3f} | {meteor[i]:.3f} "
                     f"| {src_short} | {hyp_short} |\n"
                 )
@@ -220,9 +231,11 @@ class Evaluator:
             f.write("\n---\n\n## 逐样本详情\n\n")
             for i in ranked:
                 det_mark = "✓ 已检测" if (detected and detected[i]) else "✗ 漏检(使用原注释)"
+                retry_str = str(retry_counts[i]) if has_retries else "-"
                 f.write(f"### [{i+1}/{len(ids)}] `{ids[i]}`\n\n")
                 f.write(f"| 指标 | 值 |\n|---|---|\n")
                 f.write(f"| 检测状态 | {det_mark} |\n")
+                f.write(f"| Detector 复审重试次数 | {retry_str} |\n")
                 f.write(f"| BLEU-4 | {bleu[i]:.4f} |\n")
                 f.write(f"| SARI | {sari[i]:.4f} |\n")
                 f.write(f"| GLEU | {gleu[i]:.4f} |\n")

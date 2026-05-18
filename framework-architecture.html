@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiAgentCCI Architecture</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+      background: #ffffff;
+      min-height: 100vh;
+      display: flex; justify-content: center; padding: 2rem; color: #1a1a2e;
+    }
+    .container { max-width: 1000px; width: 100%; }
+    h1 { text-align: center; font-size: 1.45rem; font-weight: 800; margin-bottom: 0.25rem; }
+    .subtitle { text-align: center; font-size: 0.8rem; color: #6b7280; margin-bottom: 1.2rem; }
+    .diagram-card {
+      background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px;
+      padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    svg { width: 100%; display: block; }
+    .footer { text-align: center; margin-top: 0.8rem; font-size: 0.7rem; color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>MultiAgentCCI 多智能体协作架构</h1>
+    <p class="subtitle">Three-Agent Architecture with Detector-Rectifier Iterative Loop</p>
+
+    <div class="diagram-card">
+      <svg viewBox="0 0 960 750" xmlns="http://www.w3.org/2000/svg">
+
+        <defs>
+          <!-- Shadows -->
+          <filter id="sh-card" x="-8%" y="-8%" width="120%" height="130%">
+            <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#00000014"/>
+          </filter>
+          <filter id="sh-sm" x="-5%" y="-5%" width="115%" height="120%">
+            <feDropShadow dx="0" dy="1.5" stdDeviation="2.5" flood-color="#0000000c"/>
+          </filter>
+
+          <!-- Arrow markers -->
+          <marker id="ma-blue"  markerWidth="11" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 11 4, 0 8" fill="#2563eb"/></marker>
+          <marker id="ma-amber" markerWidth="11" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 11 4, 0 8" fill="#d97706"/></marker>
+          <marker id="ma-red"   markerWidth="11" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 11 4, 0 8" fill="#dc2626"/></marker>
+          <marker id="ma-green" markerWidth="11" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 11 4, 0 8" fill="#059669"/></marker>
+          <marker id="ma-slate" markerWidth="11" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 11 4, 0 8" fill="#64748b"/></marker>
+          <marker id="ma-purple" markerWidth="11" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 11 4, 0 8" fill="#7c3aed"/></marker>
+
+          <!-- Robot head icon -->
+          <g id="robot">
+            <rect x="-16" y="-20" width="32" height="28" rx="7" fill="currentColor" opacity="0.08" stroke="currentColor" stroke-width="1.6"/>
+            <line x1="0" y1="-20" x2="0" y2="-27" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="0" cy="-29" r="2.5" fill="currentColor"/>
+            <circle cx="-6.5" cy="-10" r="3" fill="currentColor"/>
+            <circle cx="6.5" cy="-10" r="3" fill="currentColor"/>
+            <rect x="-7" y="-1" width="14" height="2.2" rx="1" fill="currentColor"/>
+          </g>
+
+          <!-- Database cylinder icon -->
+          <g id="db-icon">
+            <ellipse cx="0" cy="-10" rx="14" ry="5" fill="currentColor" opacity="0.12" stroke="currentColor" stroke-width="1.2"/>
+            <line x1="-14" y1="-10" x2="-14" y2="8" stroke="currentColor" stroke-width="1.2"/>
+            <line x1="14" y1="-10" x2="14" y2="8" stroke="currentColor" stroke-width="1.2"/>
+            <ellipse cx="0" cy="8" rx="14" ry="5" fill="currentColor" opacity="0.12" stroke="currentColor" stroke-width="1.2"/>
+            <ellipse cx="0" cy="-2" rx="14" ry="4" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>
+          </g>
+        </defs>
+
+        <!-- Background -->
+        <rect width="960" height="750" fill="#ffffff"/>
+        <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse">
+          <circle cx="14" cy="14" r="0.7" fill="#e5e7eb"/>
+        </pattern>
+        <rect width="960" height="750" fill="url(#dots)"/>
+
+        <!-- ================================================================ -->
+        <!-- TITLE BANNER -->
+        <!-- ================================================================ -->
+        <rect x="240" y="8" width="480" height="34" rx="17" fill="#1e293b"/>
+        <text x="480" y="30" fill="#f1f5f9" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="0.05em">MultiAgentCCI — 三智能体协同框架</text>
+
+        <!-- ================================================================ -->
+        <!-- INPUT NODE -->
+        <!-- ================================================================ -->
+        <g transform="translate(480, 85)">
+          <rect x="-70" y="-26" width="140" height="52" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-width="1.8" filter="url(#sh-sm)"/>
+          <rect x="-56" y="-12" width="24" height="18" rx="2.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+          <line x1="-51" y1="-7" x2="-37" y2="-7" stroke="#94a3b8" stroke-width="0.8" stroke-linecap="round"/>
+          <line x1="-51" y1="-4" x2="-40" y2="-4" stroke="#94a3b8" stroke-width="0.8" stroke-linecap="round"/>
+          <text x="-24" y="-6" fill="#1e293b" font-size="11" font-weight="700">Input</text>
+          <text x="-24" y="6" fill="#64748b" font-size="8">Code + Comment</text>
+          <text x="-24" y="16" fill="#94a3b8" font-size="7">(Java method + Javadoc)</text>
+        </g>
+
+        <!-- Arrow Input → ContextParser -->
+        <line x1="480" y1="111" x2="480" y2="145" stroke="#64748b" stroke-width="2" marker-end="url(#ma-slate)"/>
+        <rect x="430" y="120" width="100" height="17" rx="4" fill="#f1f5f9"/>
+        <text x="480" y="132" fill="#64748b" font-size="8.5" font-weight="600" text-anchor="middle">code, comment</text>
+
+        <!-- ================================================================ -->
+        <!-- AGENT 1: ContextParser -->
+        <!-- ================================================================ -->
+        <g transform="translate(480, 205)">
+          <rect x="-145" y="-48" width="290" height="96" rx="14" fill="#eff6ff" stroke="#2563eb" stroke-width="2.5" filter="url(#sh-card)"/>
+          <rect x="-145" y="-48" width="290" height="28" rx="14" fill="#2563eb"/>
+          <rect x="-145" y="-28" width="290" height="10" fill="#2563eb"/>
+          <text x="0" y="-30" fill="#ffffff" font-size="11.5" font-weight="700" text-anchor="middle">ContextParser</text>
+          <text x="0" y="-15" fill="#bfdbfe" font-size="8" text-anchor="middle">上下文解析智能体</text>
+
+          <!-- Robot -->
+          <g transform="translate(-108, -2)" color="#2563eb"><use href="#robot"/></g>
+
+          <text x="-68" y="-12" fill="#1e40af" font-size="10" font-weight="600">确定性代码解析</text>
+          <text x="-68" y="1" fill="#6b7280" font-size="8">tree-sitter Java AST 提取:</text>
+          <text x="-68" y="13" fill="#6b7280" font-size="8">· 方法签名、返回类型、参数列表</text>
+          <text x="-68" y="25" fill="#6b7280" font-size="8">· 异常声明、null返回、空集合返回</text>
+          <text x="-68" y="37" fill="#6b7280" font-size="8">备用: LLM JSON 提取模式</text>
+        </g>
+
+        <!-- ================================================================ -->
+        <!-- DATA FLOW: ContextParser → Detector -->
+        <!-- ================================================================ -->
+        <line x1="480" y1="253" x2="480" y2="300" stroke="#2563eb" stroke-width="2.2" marker-end="url(#ma-blue)"/>
+        <rect x="280" y="268" width="400" height="20" rx="5" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+        <text x="480" y="282" fill="#3b82f6" font-size="9" font-weight="600" text-anchor="middle">
+          intention_context · interface_context · implementation_context
+        </text>
+
+        <!-- ================================================================ -->
+        <!-- AGENT 2: Detector -->
+        <!-- ================================================================ -->
+        <g transform="translate(480, 375)">
+          <rect x="-175" y="-60" width="350" height="120" rx="14" fill="#fffbeb" stroke="#d97706" stroke-width="2.5" filter="url(#sh-card)"/>
+          <rect x="-175" y="-60" width="350" height="28" rx="14" fill="#d97706"/>
+          <rect x="-175" y="-40" width="350" height="10" fill="#d97706"/>
+          <text x="0" y="-43" fill="#1a1a2e" font-size="11.5" font-weight="700" text-anchor="middle">Detector</text>
+          <text x="0" y="-28" fill="#fef3c7" font-size="8" text-anchor="middle">一致性检测智能体</text>
+
+          <!-- Robot -->
+          <g transform="translate(-138, -12)" color="#d97706"><use href="#robot"/></g>
+
+          <!-- Rule Engine box -->
+          <rect x="-118" y="-22" width="100" height="44" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.2"/>
+          <text x="-68" y="-8" fill="#92400e" font-size="9" font-weight="600" text-anchor="middle">Rule Engine</text>
+          <text x="-68" y="4" fill="#a16207" font-size="7">硬判定规则</text>
+          <text x="-68" y="15" fill="#a16207" font-size="7">void+@return / 类型不匹配</text>
+
+          <text x="-6" y="0" fill="#d97706" font-size="12" font-weight="700">→</text>
+
+          <!-- LLM Judge box -->
+          <rect x="20" y="-22" width="100" height="44" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.2"/>
+          <text x="70" y="-8" fill="#92400e" font-size="9" font-weight="600" text-anchor="middle">LLM Judge</text>
+          <text x="70" y="4" fill="#a16207" font-size="7">逐条 Claim 验证</text>
+          <text x="70" y="15" fill="#a16207" font-size="7">+ RAG Few-shot 校准</text>
+
+          <!-- RAG badge -->
+          <rect x="135" y="-22" width="55" height="44" rx="6" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1" stroke-dasharray="3,2"/>
+          <text x="162" y="-8" fill="#6b7280" font-size="8" font-weight="600" text-anchor="middle">RAG</text>
+          <text x="162" y="4" fill="#9ca3af" font-size="6.5" text-anchor="middle">BM25</text>
+          <text x="162" y="15" fill="#9ca3af" font-size="6.5" text-anchor="middle">+S-BERT</text>
+
+          <!-- Output line -->
+          <text x="0" y="48" fill="#92400e" font-size="8" text-anchor="middle">输出: is_consistent · inconsistency_reason · detected_comment_type</text>
+        </g>
+
+        <!-- ================================================================ -->
+        <!-- DECISION SPLIT -->
+        <!-- ================================================================ -->
+
+        <!-- YES branch (left): CONSISTENT → Output -->
+        <path d="M 305 375 C 250 375, 190 375, 190 375" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#ma-green)"/>
+        <rect x="215" y="362" width="28" height="24" rx="5" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1"/>
+        <text x="229" y="378" fill="#059669" font-size="10" font-weight="800" text-anchor="middle">YES</text>
+
+        <g transform="translate(110, 375)">
+          <rect x="-65" y="-28" width="130" height="56" rx="12" fill="#ecfdf5" stroke="#10b981" stroke-width="2.5" filter="url(#sh-sm)"/>
+          <text x="0" y="-6" fill="#065f46" font-size="11.5" font-weight="700" text-anchor="middle">✓ 输出: 一致</text>
+          <text x="0" y="10" fill="#047857" font-size="8.5" text-anchor="middle">代码与注释一致</text>
+          <text x="0" y="22" fill="#6b7280" font-size="7.5" text-anchor="middle">无需修改</text>
+        </g>
+
+        <!-- NO branch (right): INCONSISTENT → Rectifier -->
+        <path d="M 655 375 L 760 375" fill="none" stroke="#dc2626" stroke-width="2.5" marker-end="url(#ma-red)"/>
+        <rect x="675" y="362" width="28" height="24" rx="5" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+        <text x="689" y="378" fill="#dc2626" font-size="10" font-weight="800" text-anchor="middle">NO</text>
+        <text x="708" y="358" fill="#dc2626" font-size="7.5" text-anchor="middle">不一致</text>
+
+        <!-- ================================================================ -->
+        <!-- AGENT 3: Rectifier -->
+        <!-- ================================================================ -->
+        <g transform="translate(830, 340)">
+          <rect x="-90" y="-55" width="180" height="110" rx="14" fill="#fef2f2" stroke="#dc2626" stroke-width="2.5" filter="url(#sh-card)"/>
+          <rect x="-90" y="-55" width="180" height="28" rx="14" fill="#dc2626"/>
+          <rect x="-90" y="-35" width="180" height="10" fill="#dc2626"/>
+          <text x="0" y="-38" fill="#ffffff" font-size="11.5" font-weight="700" text-anchor="middle">Rectifier</text>
+          <text x="0" y="-23" fill="#fecaca" font-size="8" text-anchor="middle">注释修正智能体</text>
+
+          <!-- Robot -->
+          <g transform="translate(-56, -8)" color="#dc2626"><use href="#robot"/></g>
+
+          <text x="-8" y="-12" fill="#991b1b" font-size="9" font-weight="600">最小编辑原则</text>
+          <text x="-8" y="0" fill="#6b7280" font-size="7.5">仅修正不一致词/名</text>
+          <text x="-8" y="12" fill="#6b7280" font-size="7.5">保留注释整体结构</text>
+          <text x="-8" y="24" fill="#6b7280" font-size="7.5">直接优化 SARI 指标</text>
+
+          <!-- RAG badge -->
+          <rect x="32" y="-18" width="44" height="36" rx="5" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1" stroke-dasharray="3,2"/>
+          <text x="54" y="-6" fill="#6b7280" font-size="7" font-weight="600" text-anchor="middle">RAG</text>
+          <text x="54" y="5" fill="#9ca3af" font-size="6.5" text-anchor="middle">修正</text>
+          <text x="54" y="14" fill="#9ca3af" font-size="6.5" text-anchor="middle">案例</text>
+
+          <text x="0" y="42" fill="#991b1b" font-size="7.5" text-anchor="middle">输出: rectified_comment</text>
+        </g>
+
+        <!-- ================================================================ -->
+        /* ITERATION LOOP: Rectifier → Detector (复审) */
+        /* ================================================================ -->
+        <path d="M 830 285 C 830 230, 480 190, 480 315"
+              fill="none" stroke="#7c3aed" stroke-width="2.8" stroke-dasharray="8,4" marker-end="url(#ma-purple)"/>
+
+        <!-- Loop label -->
+        <g transform="translate(655, 230)">
+          <rect x="-90" y="-22" width="180" height="44" rx="10" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.8"/>
+          <text x="0" y="-8" fill="#7c3aed" font-size="10" font-weight="700" text-anchor="middle">Detector 复审迭代</text>
+          <text x="0" y="6" fill="#a78bfa" font-size="8" text-anchor="middle">rectified_comment 作为重新输入</text>
+          <text x="0" y="18" fill="#c4b5fd" font-size="7.5" text-anchor="middle">最多 3 轮 · 直到 is_consistent = True</text>
+        </g>
+
+        <!-- Iteration badge on the arc -->
+        <g transform="translate(655, 260)">
+          <circle cx="0" cy="0" r="13" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.5"/>
+          <text x="0" y="4.5" fill="#7c3aed" font-size="11" font-weight="800" text-anchor="middle">⟳</text>
+        </g>
+
+        <!-- ================================================================ -->
+        /* OUTPUT: Rectified Comment (below Rectifier, on PASS) */
+        /* ================================================================ -->
+        <line x1="830" y1="450" x2="830" y2="495" stroke="#dc2626" stroke-width="2.2" marker-end="url(#ma-red)"/>
+
+        <g transform="translate(830, 538)">
+          <rect x="-75" y="-26" width="150" height="52" rx="12" fill="#fef2f2" stroke="#ef4444" stroke-width="2" filter="url(#sh-sm)"/>
+          <text x="0" y="-6" fill="#991b1b" font-size="11" font-weight="700" text-anchor="middle">修正注释输出</text>
+          <text x="0" y="8" fill="#6b7280" font-size="8" text-anchor="middle">Rectified Comment</text>
+          <text x="0" y="18" fill="#9ca3af" font-size="7" text-anchor="middle">(Detector 复审通过后)</text>
+        </g>
+
+        <!-- ================================================================ -->
+        /* RAG RETRIEVAL COMPONENT (bottom center) */
+        /* ================================================================ -->
+        <g transform="translate(300, 610)">
+          <rect x="-130" y="-55" width="260" height="110" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.6" filter="url(#sh-sm)"/>
+
+          <g transform="translate(-95, -8)" color="#64748b"><use href="#db-icon"/></g>
+
+          <text x="-50" y="-18" fill="#334155" font-size="11" font-weight="700">RAG 检索增强生成</text>
+          <text x="-50" y="-4" fill="#94a3b8" font-size="7.5">Retrieval-Augmented Generation</text>
+          <line x1="-115" y1="6" x2="115" y2="6" stroke="#e2e8f0" stroke-width="0.8"/>
+
+          <text x="-115" y="22" fill="#475569" font-size="8.5" font-weight="600">混合检索策略</text>
+          <text x="-115" y="36" fill="#64748b" font-size="7.5">BM25 稀疏检索 — 词汇匹配</text>
+          <text x="-115" y="48" fill="#64748b" font-size="7.5">Sentence-BERT 稠密检索 — 语义相似度</text>
+
+          <text x="20" y="22" fill="#475569" font-size="8.5" font-weight="600">训练语料</text>
+          <text x="20" y="36" fill="#64748b" font-size="7.5">Just-In-Time 数据集</text>
+          <text x="20" y="48" fill="#64748b" font-size="7.5">Param / Return / Summary</text>
+        </g>
+
+        <!-- Dashed connections: RAG → Detector, RAG → Rectifier -->
+        <line x1="230" y1="585" x2="380" y2="425" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="275" y="535" fill="#94a3b8" font-size="7" transform="rotate(-25, 275, 535)">few-shot detection examples</text>
+
+        <line x1="410" y1="595" x2="770" y2="435" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="570" y="520" fill="#94a3b8" font-size="7" transform="rotate(-15, 570, 520)">rectification examples</text>
+
+        <!-- ================================================================ -->
+        /* WORKFLOW ORCHESTRATOR (bottom) */
+        /* ================================================================ -->
+        <g transform="translate(680, 660)">
+          <rect x="-170" y="-20" width="340" height="40" rx="20" fill="#1e293b" stroke="#334155" stroke-width="1.5" filter="url(#sh-sm)"/>
+          <text x="0" y="-4" fill="#e2e8f0" font-size="10.5" font-weight="700" text-anchor="middle">WorkflowOrchestrator 工作流编排引擎</text>
+          <text x="0" y="10" fill="#94a3b8" font-size="7.5" text-anchor="middle">管理三智能体生命周期 · Detector 复审迭代控制 · 状态传递</text>
+        </g>
+
+        <!-- ================================================================ -->
+        /* AGENT COLLABORATION BOUNDARY (dashed) */
+        /* ================================================================ -->
+        <rect x="55" y="155" width="855" height="440" rx="16" fill="none" stroke="#cbd5e1" stroke-width="1.6" stroke-dasharray="6,3"/>
+        <rect x="60" y="147" width="85" height="16" rx="5" fill="#ffffff"/>
+        <text x="102" y="159" fill="#94a3b8" font-size="8" font-weight="600" text-anchor="middle">Agent 协作域</text>
+
+        <!-- ================================================================ -->
+        /* EVALUATOR & BASELINE PANEL (bottom-left) */
+        /* ================================================================ -->
+        <g transform="translate(110, 660)">
+          <rect x="-80" y="-20" width="160" height="40" rx="10" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.3" filter="url(#sh-sm)"/>
+          <text x="0" y="-6" fill="#475569" font-size="9" font-weight="700" text-anchor="middle">Evaluator 评估模块</text>
+          <text x="0" y="8" fill="#64748b" font-size="7.5" text-anchor="middle">BLEU-4 · SARI · GLEU · Meteor</text>
+          <text x="0" y="18" fill="#94a3b8" font-size="7" text-anchor="middle">+ Trace Report 逐样本追踪</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <p class="footer">
+      MultiAgentCCI · Three-Agent Framework for Code-Comment Inconsistency Detection &amp; Rectification · ICSE 2025 C4RLLaMA
+    </p>
+  </div>
+</body>
+</html>

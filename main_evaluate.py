@@ -68,12 +68,12 @@ def main():
         "--max-retries",
         type=int,
         default=2,
-        help="Reviewer 审查不通过时的最大重试次数 (默认 2，设为 1 则不重试)",
+        help="Detector 复审不通过时的最大重试次数 (默认 2，设为 1 则不重试)",
     )
     parser.add_argument(
         "--skip-review",
         action="store_true",
-        help="跳过 Reviewer 审查环节，Rectifier 输出直接作为最终结果",
+        help="跳过 Detector 复审环节，Rectifier 输出直接作为最终结果",
     )
     args = parser.parse_args()
 
@@ -125,6 +125,7 @@ def main():
     rectify_code_snippets = []
     rectify_old_code_snippets = []
     rectify_detected = []
+    rectify_retries = []
 
     # 2. 遍历数据集进行批量测试
     for i, data in enumerate(dataset):
@@ -149,6 +150,7 @@ def main():
             rectify_old_code_snippets.append(data.get("old_code_snippet", ""))
             detected = result_state.is_consistent is False
             rectify_detected.append(detected)
+            rectify_retries.append(result_state.review_retries)
             if detected and result_state.rectified_comment:
                 generated_rectifications.append(result_state.rectified_comment)
             else:
@@ -195,7 +197,7 @@ def main():
         if args.trace_rectify:
             os.makedirs(os.path.join("analysis", "reports"), exist_ok=True)
             cat_tag = args.category.lower() if args.category else "all"
-            trace_path = os.path.join("analysis", "reports", f"rectify_trace_{cat_tag}.md")
+            trace_path = os.path.join("analysis", "reports", f"rectify_trace_v2_{cat_tag}.md")
 
         rectification_metrics = evaluator.evaluate_rectification(
             sources=sources_rectification,
@@ -205,6 +207,7 @@ def main():
             code_snippets=rectify_code_snippets if args.trace_rectify else None,
             old_code_snippets=rectify_old_code_snippets if args.trace_rectify else None,
             detected_flags=rectify_detected if args.trace_rectify else None,
+            retry_counts=rectify_retries if args.trace_rectify else None,
             trace_file=trace_path,
         )
 
