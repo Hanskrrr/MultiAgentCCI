@@ -1,4 +1,0 @@
-{"id": 1, "code_snippet": "def calculate(a: int, b: int) -> int:\n    print(f\"Calculating sum of {a} and {b}\")\n    return a + b", "original_comment": "/**\n * 这是一个用于计算并返回两个整数乘积的函数。\n * @param a 第一个乘数\n * @param b 第二个乘数\n * @return a与b的乘积\n */", "label_consistent": false, "ground_truth_comment": "计算并返回两个整数a和b的加和"}
-{"id": 2, "code_snippet": "def get_user_name(user_id: str) -> str:\n    user = db.query(user_id)\n    return user.name", "original_comment": "根据用户ID从数据库查询并返回用户的姓名。", "label_consistent": true, "ground_truth_comment": "根据用户ID从数据库查询并返回用户的姓名。"}
-{"id": 3, "code_snippet": "def sort_list(items: list) -> list:\n    return sorted(items)", "original_comment": "逆序排列给定的列表并返回。", "label_consistent": false, "ground_truth_comment": "升序排列给定的列表并返回。"}
-{"id": 4, "code_snippet": "def send_email(to_addr: str, content: str):\n    smtp.send(to_addr, content)", "original_comment": "发送一封邮件到指定的邮箱地址。", "label_consistent": true, "ground_truth_comment": "发送一封邮件到指定的邮箱地址。"}
