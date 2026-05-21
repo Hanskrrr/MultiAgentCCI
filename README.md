@@ -122,24 +122,6 @@ Notes:
 - `--parser treesitter` matches the main implementation described in the thesis.
 - `--max-retries 2` matches the detector re-review loop used in the later experiments.
 
-## What should be versioned
-
-Keep:
-- source code under `agents/`, `core/`, `dataset/`, `evaluation/`, `retrieval/`, `workflow/`
-- entry scripts
-- `requirements.txt`
-- `README.md`
-- `.gitignore`
-
-Do not keep:
-- `.claude/`
-- `analysis/`
-- `refs/`
-- `*.log`
-- rendered diagrams / local HTML exports
-- local datasets and caches
-- archives, PDFs, temporary files, and private notes
-
 ## Cleaning an already polluted Git index
 
 If files are already tracked, adding them to `.gitignore` is not enough. You must remove them from the Git index once:
